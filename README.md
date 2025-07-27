@@ -2,7 +2,7 @@
 
 ## Contributors:
 
-- Daniel Gashaw
+- Daniel Gashaw Kebede
 
 ## 🧠 Project Synopsis:
 
@@ -43,7 +43,7 @@ We propose **SmartGuard Exam Proctor** — an advanced yet practical online exam
 
 Fayda is the **backbone of identity verification** in this project:
 
-- During registration, users must input their **National ID number**.
+- During registration, users must input their **National ID number or the photos**.
 - The system sends a request to Fayda's API to retrieve and verify **basic identity information and facial photo**.
 - During login, the user undergoes **live face recognition**, matched with the official photo from Fayda.
 
@@ -84,4 +84,4 @@ Fayda ensures:
 
 ---
 
-> This solution combines **identity**, **AI**, and **security** — creating an innovative and local-first approach for trustworthy online exams.
+> This solution combines **identity**, **AI**, and **security** — creating an innovative and local-first approach for trustworthy online exams. I hope i will put my hand on the to improve the education system of the my country ethiopia
