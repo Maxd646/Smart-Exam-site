@@ -10,6 +10,11 @@ from .face_recognition import encode_face_from_base64
 import json
 from django.contrib.auth import authenticate
 from django.views.decorators.http import require_GET
+import os
+import requests
+from django.shortcuts import redirect
+from django.conf import settings
+from urllib.parse import urlencode
 
 @csrf_exempt
 @login_required
@@ -92,10 +97,12 @@ def verify_credentials(request):
                 'error': 'Invalid username or password.',
                 'step': 'credentials_failed'
             }, status=401)
-        
-        # Check if user has biometric profile
+        # Check if user is blocked
         try:
             profile = UserProfile.objects.get(user=user)
+            if profile.blocked:
+                return JsonResponse({'verified': False, 'error': 'User is blocked by supervisor.', 'step': 'blocked'}, status=403)
+            
             has_face = profile.face_encoding is not None
             has_iris = profile.iris_encoding is not None
             has_fingerprint = profile.fingerprint_encoding is not None
@@ -139,6 +146,8 @@ def verify_biometric(request):
             return JsonResponse({'error': 'User not found.'}, status=404)
         
         # Verify biometric based on type
+        if profile.blocked:
+            return JsonResponse({'verified': False, 'error': 'User is blocked by supervisor.', 'step': 'blocked'}, status=403)
         if biometric_type == 'face':
             from .face_recognition import compare_faces
             match = compare_faces(profile.face_encoding, biometric_data)
@@ -338,3 +347,80 @@ def fayda_callback(request):
             return JsonResponse({'error': f'Verification failed: {str(e)}'}, status=500)
     
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def get_env(key, default=None):
+    return os.environ.get(key, getattr(settings, key, default))
+
+@csrf_exempt
+def verifayda_login(request):
+    """Redirect user to VeriFayda OIDC authorization endpoint"""
+    client_id = get_env('VERIFAYDA_CLIENT_ID')
+    redirect_uri = get_env('VERIFAYDA_REDIRECT_URI')
+    authorization_endpoint = get_env('VERIFAYDA_AUTHORIZATION_ENDPOINT')
+    state = 'verifayda_' + os.urandom(8).hex()
+    params = {
+        'client_id': client_id,
+        'redirect_uri': redirect_uri,
+        'response_type': 'code',
+        'scope': 'openid profile',
+        'state': state,
+    }
+    url = f"{authorization_endpoint}?{urlencode(params)}"
+    return redirect(url)
+
+@csrf_exempt
+def verifayda_callback(request):
+    """Handle VeriFayda OIDC callback, exchange code for token, fetch user info"""
+    code = request.GET.get('code')
+    state = request.GET.get('state')
+    if not code:
+        return JsonResponse({'error': 'Missing code from VeriFayda.'}, status=400)
+    # Exchange code for token
+    token_endpoint = get_env('VERIFAYDA_TOKEN_ENDPOINT')
+    client_id = get_env('VERIFAYDA_CLIENT_ID')
+    redirect_uri = get_env('VERIFAYDA_REDIRECT_URI')
+    data = {
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': redirect_uri,
+        'client_id': client_id,
+    }
+    token_resp = requests.post(token_endpoint, data=data)
+    if token_resp.status_code != 200:
+        return JsonResponse({'error': 'Failed to get token from VeriFayda.'}, status=401)
+    tokens = token_resp.json()
+    access_token = tokens.get('access_token')
+    if not access_token:
+        return JsonResponse({'error': 'No access token from VeriFayda.'}, status=401)
+    # Fetch user info
+    userinfo_endpoint = get_env('VERIFAYDA_USERINFO_ENDPOINT')
+    headers = {'Authorization': f'Bearer {access_token}'}
+    userinfo_resp = requests.get(userinfo_endpoint, headers=headers)
+    if userinfo_resp.status_code != 200:
+        return JsonResponse({'error': 'Failed to fetch user info from VeriFayda.'}, status=401)
+    userinfo = userinfo_resp.json()
+    # You can extract user info as needed, e.g. sub, name, etc.
+    # For demo, just return userinfo and require biometric next
+    return JsonResponse({
+        'step': 'verifayda_authenticated',
+        'userinfo': userinfo,
+        'message': 'VeriFayda OIDC authentication successful. Please provide biometric data.'
+    })
+
+@csrf_exempt
+def block_user(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        username = data.get('username')
+        block = data.get('block', True)
+        if not username:
+            return JsonResponse({'error': 'Username required.'}, status=400)
+        try:
+            user = User.objects.get(username=username)
+            profile = UserProfile.objects.get(user=user)
+            profile.blocked = block
+            profile.save()
+            return JsonResponse({'success': True, 'blocked': profile.blocked})
+        except (User.DoesNotExist, UserProfile.DoesNotExist):
+            return JsonResponse({'error': 'User not found.'}, status=404)
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)

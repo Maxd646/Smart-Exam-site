@@ -7,6 +7,7 @@ class UserProfile(models.Model):
     iris_encoding = models.BinaryField(null=True, blank=True)  # NEW: for iris biometrics
     fingerprint_encoding = models.BinaryField(null=True, blank=True)  # NEW: for fingerprint biometrics
     rf_identifier = models.CharField(max_length=255, null=True, blank=True)  # optional RF tag/device ID
+    blocked = models.BooleanField(default=False)
 
     def __str__(self):
         return self.user.username

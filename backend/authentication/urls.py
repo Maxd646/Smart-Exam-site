@@ -13,4 +13,7 @@ urlpatterns = [
     path('alerts/', views.list_alerts, name='list_alerts'),
     path('fayda-callback/', views.fayda_callback, name='fayda_callback'),
     path('start-monitoring/', views.start_behavioral_monitoring, name='start_behavioral_monitoring'),
+    path('verifayda-login/', views.verifayda_login, name='verifayda_login'),
+    path('verifayda-callback/', views.verifayda_callback, name='verifayda_callback'),
+    path('block-user/', views.block_user, name='block_user'),
 ]

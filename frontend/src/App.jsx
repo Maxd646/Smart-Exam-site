@@ -93,7 +93,8 @@ function ExamInterface({ user }) {
               Welcome, {user.username}!
             </h1>
             <p style={{ color: "#666", margin: "0" }}>
-              Exam in Progress • Biometric: {user.biometric || "Face"} • Fayda Verified: ✅ • AI Monitoring: 🔍
+              Exam in Progress • Biometric: {user.biometric || "Face"} • Fayda
+              Verified: ✅ • AI Monitoring: 🔍
             </p>
           </div>
           <div
@@ -130,19 +131,37 @@ function ExamInterface({ user }) {
         <div style={{ marginTop: "24px" }}>
           {/* Exam Interface */}
           <div style={{ marginBottom: "30px" }}>
-            <h2 style={{ color: "#333", marginBottom: "20px", borderBottom: "2px solid #f0f0f0", paddingBottom: "10px" }}>
+            <h2
+              style={{
+                color: "#333",
+                marginBottom: "20px",
+                borderBottom: "2px solid #f0f0f0",
+                paddingBottom: "10px",
+              }}
+            >
               📝 Final Examination - Computer Science
             </h2>
-            
-            <div style={{ 
-              background: "#f8f9fa", 
-              padding: "20px", 
-              borderRadius: "10px", 
-              marginBottom: "20px",
-              border: "1px solid #e9ecef"
-            }}>
-              <h3 style={{ color: "#495057", marginBottom: "15px" }}>Instructions:</h3>
-              <ul style={{ color: "#6c757d", lineHeight: "1.6", margin: "0", paddingLeft: "20px" }}>
+
+            <div
+              style={{
+                background: "#f8f9fa",
+                padding: "20px",
+                borderRadius: "10px",
+                marginBottom: "20px",
+                border: "1px solid #e9ecef",
+              }}
+            >
+              <h3 style={{ color: "#495057", marginBottom: "15px" }}>
+                Instructions:
+              </h3>
+              <ul
+                style={{
+                  color: "#6c757d",
+                  lineHeight: "1.6",
+                  margin: "0",
+                  paddingLeft: "20px",
+                }}
+              >
                 <li>This exam contains 50 multiple-choice questions</li>
                 <li>You have 120 minutes to complete the exam</li>
                 <li>Each question has only one correct answer</li>
@@ -151,16 +170,28 @@ function ExamInterface({ user }) {
               </ul>
             </div>
 
-            <div style={{ 
-              background: "#e7f3ff", 
-              padding: "15px", 
-              borderRadius: "10px", 
-              marginBottom: "20px",
-              border: "1px solid #b3d9ff"
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontWeight: "bold", color: "#0056b3" }}>Question 1 of 50</span>
-                <span style={{ color: "#0056b3" }}>⏱️ Time Remaining: 1:58:45</span>
+            <div
+              style={{
+                background: "#e7f3ff",
+                padding: "15px",
+                borderRadius: "10px",
+                marginBottom: "20px",
+                border: "1px solid #b3d9ff",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span style={{ fontWeight: "bold", color: "#0056b3" }}>
+                  Question 1 of 50
+                </span>
+                <span style={{ color: "#0056b3" }}>
+                  ⏱️ Time Remaining: 1:58:45
+                </span>
               </div>
             </div>
 
@@ -168,21 +199,31 @@ function ExamInterface({ user }) {
               <h4 style={{ color: "#333", marginBottom: "15px" }}>
                 What is the time complexity of binary search?
               </h4>
-              
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {['O(1)', 'O(log n)', 'O(n)', 'O(n²)'].map((option, index) => (
-                  <label key={index} style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "12px 15px",
-                    border: "2px solid #e9ecef",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    background: "white"
-                  }}
-                  onMouseOver={(e) => e.target.style.borderColor = "#667eea"}
-                  onMouseOut={(e) => e.target.style.borderColor = "#e9ecef"}
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                }}
+              >
+                {["O(1)", "O(log n)", "O(n)", "O(n²)"].map((option, index) => (
+                  <label
+                    key={index}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "12px 15px",
+                      border: "2px solid #e9ecef",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      background: "white",
+                    }}
+                    onMouseOver={(e) =>
+                      (e.target.style.borderColor = "#667eea")
+                    }
+                    onMouseOut={(e) => (e.target.style.borderColor = "#e9ecef")}
                   >
                     <input
                       type="radio"
@@ -190,13 +231,21 @@ function ExamInterface({ user }) {
                       value={option}
                       style={{ marginRight: "10px", transform: "scale(1.2)" }}
                     />
-                    <span style={{ color: "#495057", fontWeight: "500" }}>{option}</span>
+                    <span style={{ color: "#495057", fontWeight: "500" }}>
+                      {option}
+                    </span>
                   </label>
                 ))}
               </div>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <button
                 style={{
                   padding: "12px 24px",
@@ -206,13 +255,13 @@ function ExamInterface({ user }) {
                   borderRadius: "8px",
                   cursor: "pointer",
                   fontWeight: "bold",
-                  opacity: "0.5"
+                  opacity: "0.5",
                 }}
                 disabled
               >
                 ← Previous
               </button>
-              
+
               <button
                 onClick={() => setSubmitted(true)}
                 style={{
@@ -223,10 +272,12 @@ function ExamInterface({ user }) {
                   borderRadius: "8px",
                   cursor: "pointer",
                   fontWeight: "bold",
-                  transition: "all 0.3s ease"
+                  transition: "all 0.3s ease",
                 }}
-                onMouseOver={(e) => e.target.style.transform = "translateY(-1px)"}
-                onMouseOut={(e) => e.target.style.transform = "translateY(0)"}
+                onMouseOver={(e) =>
+                  (e.target.style.transform = "translateY(-1px)")
+                }
+                onMouseOut={(e) => (e.target.style.transform = "translateY(0)")}
               >
                 Next →
               </button>
@@ -258,7 +309,8 @@ function App() {
   const [user, setUser] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showLanding, setShowLanding] = useState(true);
-  const [faydaVerified, setFaydaVerified] = useState(false);
+  const [needsBiometric, setNeedsBiometric] = useState(false);
+  const [oidcUserInfo, setOidcUserInfo] = useState(null);
 
   const handleStart = () => {
     setShowLanding(false);
@@ -267,26 +319,33 @@ function App() {
   const handleLogin = (userData) => {
     setUser(userData);
     setShowLanding(false);
+    setNeedsBiometric(false);
+    setOidcUserInfo(null);
   };
 
-  // Handle Fayda callback
+  // Handle VeriFayda OIDC callback
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const state = urlParams.get('state');
-    const code = urlParams.get('code');
-    
-    if (code && state) {
-      try {
-        const userData = JSON.parse(decodeURIComponent(state));
-        setUser(userData);
-        setFaydaVerified(true);
-        setShowLanding(false);
-        
-        // Clean up URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } catch (error) {
-        console.error('Error parsing Fayda callback:', error);
-      }
+    const code = urlParams.get("code");
+    if (code) {
+      // Call backend to exchange code for user info
+      fetch(
+        `http://localhost:8000/authentication/verifayda-callback/?code=${code}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.step === "verifayda_authenticated") {
+            setOidcUserInfo(data.userinfo);
+            setNeedsBiometric(true);
+            setShowLanding(false);
+            // Clean up URL
+            window.history.replaceState(
+              {},
+              document.title,
+              window.location.pathname
+            );
+          }
+        });
     }
   }, []);
 
@@ -316,6 +375,17 @@ function App() {
         </button>
         <AdminDashboard />
       </div>
+    );
+  }
+
+  // If OIDC login, show biometric step in Login
+  if (needsBiometric) {
+    return (
+      <Login
+        onLogin={handleLogin}
+        oidcUserInfo={oidcUserInfo}
+        forceBiometric={true}
+      />
     );
   }
 
