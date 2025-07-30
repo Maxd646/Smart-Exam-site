@@ -98,6 +98,70 @@ This ensures:
 
 ---
 
+## 🛠️ Installation and Deployment
+
+### 1. Prerequisites
+- **Python 3.11+**
+- **Node.js 18+**
+- **Docker & Docker Compose** (for containerized deployment)
+
+### 2. Clone the Repository
+```bash
+git clone <your-repo-url>
+cd <your-repo-directory>
+```
+
+### 3. Install Dependencies
+#### Backend (Django)
+```bash
+cd backend
+pip install -r requirements.txt
+```
+#### Frontend (React)
+```bash
+cd ../frontend
+npm install
+```
+
+### 4. Running the App Locally
+#### Start the Backend (Django)
+```bash
+cd backend
+python manage.py migrate  # Run migrations if needed
+python manage.py runserver
+```
+#### Start the Frontend (React)
+Open a new terminal:
+```bash
+cd frontend
+npm start
+```
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+
+### 5. Deploying with Docker
+#### Build and Run All Services
+```bash
+docker-compose up --build
+```
+- This will build both the frontend and backend, and start the database.
+- Access the app at http://localhost:8000 (backend) and http://localhost:3000 (frontend, if exposed).
+
+#### Stopping the Services
+```bash
+docker-compose down
+```
+
+### 6. Environment Variables
+- You may add a `.env` file in the root directory for custom environment variables (see `docker-compose.yml`).
+
+### 7. Running Tests
+```bash
+python test_fayda_integration.py
+```
+
+---
+
 ## 🚀 Quick Start:
 
 ### Prerequisites:
