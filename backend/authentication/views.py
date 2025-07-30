@@ -424,3 +424,25 @@ def block_user(request):
         except (User.DoesNotExist, UserProfile.DoesNotExist):
             return JsonResponse({'error': 'User not found.'}, status=404)
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+@csrf_exempt
+def update_photo(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        username = data.get('username')
+        image_data = data.get('image')
+        if not username or not image_data:
+            return JsonResponse({'error': 'Username and image required.'}, status=400)
+        try:
+            user = User.objects.get(username=username)
+            profile = UserProfile.objects.get(user=user)
+            from .face_recognition import encode_face_from_base64
+            face_encoding = encode_face_from_base64(image_data)
+            if face_encoding is None:
+                return JsonResponse({'error': 'No face detected in the new photo.'}, status=400)
+            profile.face_encoding = face_encoding
+            profile.save()
+            return JsonResponse({'success': True, 'message': 'Photo updated successfully.'})
+        except (User.DoesNotExist, UserProfile.DoesNotExist):
+            return JsonResponse({'error': 'User not found.'}, status=404)
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)

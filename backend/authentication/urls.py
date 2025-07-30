@@ -16,4 +16,5 @@ urlpatterns = [
     path('verifayda-login/', views.verifayda_login, name='verifayda_login'),
     path('verifayda-callback/', views.verifayda_callback, name='verifayda_callback'),
     path('block-user/', views.block_user, name='block_user'),
+    path('update-photo/', views.update_photo, name='update_photo'),
 ]

@@ -3,8 +3,15 @@ from .models import UserProfile, ExamSession, Alert
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'rf_identifier')
-    search_fields = ('user__username', 'rf_identifier')
+    list_display = ('user', 'full_name', 'national_id', 'age', 'education_level', 'rf_identifier', 'blocked', 'national_id_photo')
+    search_fields = ('user__username', 'full_name', 'national_id', 'rf_identifier')
+    list_filter = ('education_level', 'blocked')
+    readonly_fields = ()
+    fieldsets = (
+        (None, {
+            'fields': ('user', 'full_name', 'national_id', 'age', 'education_level', 'national_id_photo', 'rf_identifier', 'blocked')
+        }),
+    )
 
 @admin.register(ExamSession)
 class ExamSessionAdmin(admin.ModelAdmin):
