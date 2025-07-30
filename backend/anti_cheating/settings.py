@@ -2,10 +2,12 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 SECRET_KEY = 'django-insecure-verysecretkey12345'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
+# Installed apps
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -13,12 +15,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Third-party
     'channels',
-    'authentication',
     'rest_framework',
     'corsheaders',
+
+    # Your apps
+    'authentication',
 ]
 
+# Middleware
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -33,6 +40,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'anti_cheating.urls'
 ASGI_APPLICATION = 'anti_cheating.asgi.application'
 
+# Templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -49,6 +57,7 @@ TEMPLATES = [
     },
 ]
 
+# Channels Layer (Redis)
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -58,6 +67,7 @@ CHANNEL_LAYERS = {
     },
 }
 
+# Database (MySQL)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -69,7 +79,18 @@ DATABASES = {
     }
 }
 
+# Static files
 STATIC_URL = '/static/'
+
+# Optional: only include this if the folder exists
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "frontend_build", "static")
+]
+
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
@@ -79,7 +100,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
-# REST Framework settings
+# REST framework
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
@@ -88,9 +109,3 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
 }
-
-import os
-
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "frontend_build", "static")]
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
