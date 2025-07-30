@@ -62,7 +62,7 @@ function LandingPage({ onStart }) {
             animation: "fadeInUp 1s ease-out 0.2s both",
           }}
         >
-          SmartGuard Exam Proctor
+          be careful with your exams!
         </h1>
         {/* Subtitle */}
         <p
