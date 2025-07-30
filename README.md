@@ -1,4 +1,4 @@
-# Project Title: SmartGuard Exam Proctor
+# Project Title: SmartGuard 
 
 ## Contributors:
 
