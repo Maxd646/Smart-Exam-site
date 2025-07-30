@@ -10,6 +10,9 @@ function Login({ onLogin, forceBiometric = false, oidcUserInfo = null }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(forceBiometric ? 2 : 1); // 1: credentials, 2: biometric
+  const [nationalIdPhotoUrl, setNationalIdPhotoUrl] = useState(null);
+  const [showMatchResult, setShowMatchResult] = useState(false);
+  const [matchSuccess, setMatchSuccess] = useState(null);
 
   // If OIDC user info changes, update username and step
   React.useEffect(() => {
@@ -20,6 +23,20 @@ function Login({ onLogin, forceBiometric = false, oidcUserInfo = null }) {
       }
     }
   }, [forceBiometric, oidcUserInfo]);
+
+  // Fetch national ID photo when username is set and step is biometric
+  React.useEffect(() => {
+    if (step === 2 && username) {
+      fetch(
+        `http://localhost:8000/authentication/national-id-photo/?username=${encodeURIComponent(username)}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.photo_url) setNationalIdPhotoUrl(data.photo_url);
+          else setNationalIdPhotoUrl(null);
+        });
+    }
+  }, [step, username]);
 
   // Start webcam and automatically capture biometric
   const startCamera = async () => {
@@ -91,6 +108,8 @@ function Login({ onLogin, forceBiometric = false, oidcUserInfo = null }) {
   const handleAutoLogin = async (imageData) => {
     setLoading(true);
     setError("");
+    setShowMatchResult(false);
+    setMatchSuccess(null);
     try {
       const res = await fetch(
         "http://localhost:8000/authentication/verify-biometric/",
@@ -106,6 +125,8 @@ function Login({ onLogin, forceBiometric = false, oidcUserInfo = null }) {
       );
       const data = await res.json();
       if (res.ok && data.verified) {
+        setShowMatchResult(true);
+        setMatchSuccess(true);
         // Store user data temporarily
         const userData = { ...data, biometric: biometricType };
 
@@ -137,12 +158,16 @@ function Login({ onLogin, forceBiometric = false, oidcUserInfo = null }) {
         setError("");
         window.location.href = redirectUrl;
       } else {
+        setShowMatchResult(true);
+        setMatchSuccess(false);
         setError(
           data.error || "Biometric verification failed. Please try again."
         );
         setLoading(false);
       }
     } catch (err) {
+      setShowMatchResult(true);
+      setMatchSuccess(false);
       setError("Network error. Please check your connection.");
       setLoading(false);
     }
@@ -287,6 +312,99 @@ function Login({ onLogin, forceBiometric = false, oidcUserInfo = null }) {
         ) : (
           // Biometric Step
           <div>
+            {/* Show national ID photo and live photo side by side */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: 32,
+                marginBottom: 24,
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>
+                  National ID Photo
+                </div>
+                {nationalIdPhotoUrl ? (
+                  <img
+                    src={nationalIdPhotoUrl}
+                    alt="National ID"
+                    style={{
+                      width: 120,
+                      height: 120,
+                      objectFit: "cover",
+                      borderRadius: 12,
+                      border: "2px solid #667eea",
+                      background: "#fff",
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: 12,
+                      background: "#eee",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#aaa",
+                      fontSize: 14,
+                    }}
+                  >
+                    No Photo
+                  </div>
+                )}
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>
+                  Live Photo
+                </div>
+                {capturedImage ? (
+                  <img
+                    src={capturedImage}
+                    alt="Live"
+                    style={{
+                      width: 120,
+                      height: 120,
+                      objectFit: "cover",
+                      borderRadius: 12,
+                      border: "2px solid #ff6b6b",
+                      background: "#fff",
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: 12,
+                      background: "#eee",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#aaa",
+                      fontSize: 14,
+                    }}
+                  >
+                    No Photo
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Show match result */}
+            {showMatchResult && (
+              <div
+                style={{
+                  fontWeight: 700,
+                  fontSize: 18,
+                  color: matchSuccess ? "#28a745" : "#dc3545",
+                  marginBottom: 16,
+                }}
+              >
+                {matchSuccess ? "✅ Face Match" : "❌ Face Does Not Match"}
+              </div>
+            )}
             <select
               value={biometricType}
               onChange={(e) => setBiometricType(e.target.value)}

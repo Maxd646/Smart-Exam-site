@@ -391,7 +391,16 @@ function App() {
 
   if (!user || !user.verified) {
     return (
-      <div>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        }}
+      >
         <button
           onClick={() => setShowLanding(true)}
           style={{
@@ -409,7 +418,42 @@ function App() {
         >
           ← Back to Home
         </button>
-        <Login onLogin={handleLogin} />
+        <div style={{ marginTop: 80, textAlign: "center" }}>
+          <div
+            style={{
+              fontSize: 64,
+              marginBottom: 24,
+              color: "#fff",
+              textShadow: "0 2px 12px #333",
+            }}
+          >
+            🔒
+          </div>
+          <h2
+            style={{
+              color: "#fff",
+              marginBottom: 12,
+              textShadow: "0 2px 8px #333",
+            }}
+          >
+            Biometric Verification Required
+          </h2>
+          <p
+            style={{
+              color: "#f8f9fa",
+              fontSize: 18,
+              marginBottom: 32,
+              opacity: 0.92,
+            }}
+          >
+            Please complete biometric authentication to access the exam.
+            <br />
+            This ensures the highest level of security for all students.
+          </p>
+          <div style={{ maxWidth: 400, margin: "0 auto" }}>
+            <Login onLogin={handleLogin} />
+          </div>
+        </div>
       </div>
     );
   }

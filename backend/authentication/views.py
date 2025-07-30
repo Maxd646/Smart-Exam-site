@@ -15,6 +15,7 @@ import requests
 from django.shortcuts import redirect
 from django.conf import settings
 from urllib.parse import urlencode
+from django.core.files.storage import default_storage
 
 @csrf_exempt
 @login_required
@@ -446,3 +447,19 @@ def update_photo(request):
         except (User.DoesNotExist, UserProfile.DoesNotExist):
             return JsonResponse({'error': 'User not found.'}, status=404)
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+@csrf_exempt
+def national_id_photo(request):
+    username = request.GET.get('username')
+    if not username:
+        return JsonResponse({'error': 'Username required.'}, status=400)
+    try:
+        user = User.objects.get(username=username)
+        profile = UserProfile.objects.get(user=user)
+        if profile.national_id_photo:
+            photo_url = request.build_absolute_uri(profile.national_id_photo.url)
+            return JsonResponse({'photo_url': photo_url})
+        else:
+            return JsonResponse({'photo_url': None, 'error': 'No national ID photo found.'}, status=404)
+    except (User.DoesNotExist, UserProfile.DoesNotExist):
+        return JsonResponse({'error': 'User not found.'}, status=404)
