@@ -1,0 +1,3 @@
+Time: 2025-07-29 14:43:33.894094, Event: Looking Down
+Time: 2025-07-29 14:43:38.000374, Event: Hand near lap
+Time: 2025-07-29 14:43:42.342955, Event: Looking Down
