@@ -3,6 +3,7 @@
 ## Contributors:
 
 - Daniel Gashaw Kebede
+- Desalegn Sisay
 
 ## 🚀 Project Status: **COMPLETED & READY FOR DEPLOYMENT**
 
