@@ -1,11 +1,41 @@
-import React from "react";
-import { redirect, useNavigate } from "react-router-dom";
-
-function LandingPage({ onStart }) {
+import React, { useEffect, useState } from "react";
+import styles from "./HeroSection.module.css";
+import LandingPage from "../../LandingPage";
+import { useNavigate } from "react-router-dom";
+const HeroSection = () => {
+  const [needsBiometric, setNeedsBiometric] = useState(false);
+  const [oidcUserInfo, setOidcUserInfo] = useState(null);
   const navigate = useNavigate();
   const handleStart = () => {
     navigate("/login");
   };
+
+  // Handle VeriFayda OIDC callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    if (code) {
+      // Call backend to exchange code for user info
+      fetch(
+        `http://localhost:8000/authentication/verifayda-callback/?code=${code}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.step === "verifayda_authenticated") {
+            setOidcUserInfo(data.userinfo);
+            setNeedsBiometric(true);
+            setShowLanding(false);
+            // Clean up URL
+            window.history.replaceState(
+              {},
+              document.title,
+              window.location.pathname
+            );
+          }
+        });
+    }
+  }, []);
+
   return (
     <div
       style={{
@@ -247,6 +277,6 @@ function LandingPage({ onStart }) {
       `}</style>
     </div>
   );
-}
+};
 
-export default LandingPage;
+export default HeroSection;
