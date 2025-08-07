@@ -2,8 +2,8 @@
 
 ## Contributors:
 
-- Daniel Gashaw Kebede
-- Desalegn Sisay
+- Daniel Kebede
+- Alehegne Geta
 
 ## 🚀 Project Status: **COMPLETED & READY FOR DEPLOYMENT**
 
