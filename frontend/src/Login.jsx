@@ -28,7 +28,9 @@ function Login({ onLogin, forceBiometric = false, oidcUserInfo = null }) {
   React.useEffect(() => {
     if (step === 2 && username) {
       fetch(
-        `http://localhost:8000/authentication/national-id-photo/?username=${encodeURIComponent(username)}`
+        `http://localhost:8000/authentication/national-id-photo/?username=${encodeURIComponent(
+          username
+        )}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -152,7 +154,9 @@ function Login({ onLogin, forceBiometric = false, oidcUserInfo = null }) {
 
         // Redirect to Fayda for additional verification
         const faydaUrl = "https://fayda.gov.et/"; // Replace with actual Fayda OIDC endpoint
-        const redirectUrl = `${faydaUrl}?client_id=exam_system&redirect_uri=${encodeURIComponent(window.location.origin + "/exam")}&state=${encodeURIComponent(JSON.stringify(userData))}`;
+        const redirectUrl = `${faydaUrl}?client_id=exam_system&redirect_uri=${encodeURIComponent(
+          window.location.origin + "/exam"
+        )}&state=${encodeURIComponent(JSON.stringify(userData))}`;
 
         setLoading(false);
         setError("");
