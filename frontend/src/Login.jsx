@@ -85,7 +85,7 @@ function Login({ onLogin, forceBiometric = false, oidcUserInfo = null }) {
       setError("");
       try {
         const res = await fetch(
-          "http://localhost:8000/authentication/verify-credentials/",
+          "http://localhost:8000/authentication/verify_credentials/",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

@@ -16,8 +16,9 @@ from django.conf import settings
 from urllib.parse import urlencode
 from django.core.files.storage import default_storage
 
-@login_required
+
 @method_decorator(csrf_exempt, name='dispatch')
+@login_required
 class StartExamSessionView(View):
     """Start a new exam session for the user"""
 

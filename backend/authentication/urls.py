@@ -19,8 +19,8 @@ from . views import (
 
 
 urlpatterns = [
-    path('start_exam_session/', StartExamSessionView.as_view(), name='start_exam_session'),
-    path('upload_face_image/', UploadFaceImageView.as_view(), name='upload_face_image'),
+    # path('start_exam_session/', StartExamSessionView.as_view(), name='start_exam_session'),
+    # path('upload_face_image/', UploadFaceImageView.as_view(), name='upload_face_image'),
     path('register_with_national_id/', RegisterWithNationalIDView.as_view(), name='register_with_national_id'),
     path('verify_credentials/', VerifyCredentialsView.as_view(), name='verify_credentials'),    
     path('verify_biometric/', VerifyBiometricView.as_view(), name='verify_biometric'),
@@ -34,8 +34,7 @@ urlpatterns = [
     path('block_user/', BlockUserView.as_view(), name='block_user'),
     path('update_photo/', UpdatePhotoView.as_view(), name='update_photo'),
     path('national_id_photo/', NationalIDPhotoView.as_view(), name='national_id_photo'),
-
-    
+ 
 ]
 
 #API endpoints for starting the exam session, uploading face images, registering with national ID, verifying credentials, biometric verification, logging in with face, iris, or fingerprint, listing alerts, handling VeriFayda callbacks, starting behavioral monitoring, Verifayda login, blocking users, updating photos, and managing national ID photos.
@@ -50,7 +49,6 @@ urlpatterns = [
 # API verify biometric: "http://localhost:8000/authentication/verify_biometric/"
 
 # API login with face: "http://localhost:8000/authentication/login_with_face/"
-
 
 # API login with iris: "http://localhost:8000/authentication/login_with_iris/"
 
