@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./LoginWithBiometric.module.css";
+import { useLoginWithBiometricsMutation } from "../../api/restApi/authApi";
 
 export const LoginWithBiometric = () => {
   const [capturedImage, setCapturedImage] = React.useState(null);
@@ -12,6 +13,7 @@ export const LoginWithBiometric = () => {
   const [error, setError] = useState("");
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const [loginWithBiometrics, result] = useLoginWithBiometricsMutation();
 
   const startCamera = async () => {
     console.log("starting webcam...");
@@ -56,32 +58,24 @@ export const LoginWithBiometric = () => {
     setShowMatchResult(false);
     setMatchSuccess(null);
     try {
-      // const res = await fetch(
-      //   "http://localhost:8000/authentication/verify-biometric/",
-      //   {
-      //     method: "POST",
-      //     headers: { "Content-Type": "application/json" },
-      //     body: JSON.stringify({
-      //       username: username,
-      //       biometric_type: biometricType,
-      //       biometric_data: imageData,
-      //     }),
-      //   }
-      // );
-      // const data = await res.json();
-      // if (res.ok && data.verified) {
-      if (true) {
+      const res = await loginWithBiometrics({
+        username: username,
+        biometric_type: biometricType,
+        biometric_data: imageData,
+      }).unwrap();
+      console.log("response:", res);
+      if (res.ok) {
         // Simulating successful verification for demo purposes
-        // setShowMatchResult(true);
-        // setMatchSuccess(true);
-        //// Store user data temporarily
+        setShowMatchResult(true);
+        setMatchSuccess(true);
+        // Store user data temporarily
         // const userData = { ...data, biometric: biometricType };
 
         // Start behavioral monitoring for this user
         console.log("success login....");
         try {
           // const monitoringResponse = await fetch(
-          //   "http://localhost:8000/authentication/start-monitoring/",
+          //   "http://localhost:8000/authentication/start_behavioral_monitoring/",
           //   {
           //     method: "POST",
           //     headers: { "Content-Type": "application/json" },
@@ -169,7 +163,6 @@ export const LoginWithBiometric = () => {
           <option value="iris">Iris Recognition</option>
           <option value="fingerprint">Fingerprint Recognition</option>
         </select>
-
         <div style={{ marginBottom: "20px", textAlign: "center" }}>
           <div style={{ fontSize: "24px", marginBottom: "10px" }}>📷</div>
           <p className={styles.instructions}>

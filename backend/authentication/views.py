@@ -18,7 +18,7 @@ from django.core.files.storage import default_storage
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-@login_required
+@method_decorator(login_required, name='dispatch')
 class StartExamSessionView(View):
     """Start a new exam session for the user"""
 
@@ -33,7 +33,6 @@ class StartExamSessionView(View):
     
 
 @method_decorator(csrf_exempt, name='dispatch')
-@login_required
 class UploadFaceImageView(View):
     """Upload a face image for verification"""
 
@@ -384,6 +383,7 @@ class FaydaCallbackView(View):
             return JsonResponse({'error': f'Verification failed: {str(e)}'}, status=500)
 
 @method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(login_required, name='dispatch')
 class StartBehavioralMonitoringView(View):
     """Start behavioral monitoring for a user after successful login"""
 

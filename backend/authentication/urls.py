@@ -19,8 +19,8 @@ from . views import (
 
 
 urlpatterns = [
-    # path('start_exam_session/', StartExamSessionView.as_view(), name='start_exam_session'),
-    # path('upload_face_image/', UploadFaceImageView.as_view(), name='upload_face_image'),
+    path('start_exam_session/', StartExamSessionView.as_view(), name='start_exam_session'),
+    path('upload_face_image/', UploadFaceImageView.as_view(), name='upload_face_image'),
     path('register_with_national_id/', RegisterWithNationalIDView.as_view(), name='register_with_national_id'),
     path('verify_credentials/', VerifyCredentialsView.as_view(), name='verify_credentials'),    
     path('verify_biometric/', VerifyBiometricView.as_view(), name='verify_biometric'),
