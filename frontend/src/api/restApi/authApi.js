@@ -1,6 +1,6 @@
 import baseQury from "./basequery";
 
-const { createApi, fetchBaseQuery } = require("@reduxjs/toolkit/query/react");
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const authApi = createApi({
   reducerPath: "authApi", //name of the slice, used while configuring in the store
