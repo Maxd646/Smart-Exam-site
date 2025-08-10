@@ -64,11 +64,31 @@ export const authApi = createApi({
       async onQueryStarted() {}, //optional, can be used for optimistic updates
       async onCacheEntryAdded() {}, //optional, can be used to manage cache
     }),
-  }),
+    getNationalId: build.query({
+        query: (username) => ({
+          url: `/get_national_id/${username}/`,
+          method:"GET",
+        }),
+        transformResponse: (response) => {
+          //handle response
+          return response;
+        },
+        transformErrorResponse: (error) => {
+          //handle error response
+          console.error("Get National ID error:", error);
+          return {
+            message: error.data.message,
+            status: error.status,
+          };
+        },
+
+    })
+  }), 
 });
 
 export const {
   useLoginMutation,
   useLoginWithBiometricsMutation,
   useLogoutMutation,
+  useGetNationalIdQuery
 } = authApi;

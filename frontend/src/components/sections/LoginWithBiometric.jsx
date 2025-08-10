@@ -1,7 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./LoginWithBiometric.module.css";
-import { useLoginWithBiometricsMutation } from "../../api/restApi/authApi";
+import { useGetNationalIdQuery, useLoginWithBiometricsMutation } from "../../api/restApi/authApi";
+import { useSelector } from "react-redux";
 
 export const LoginWithBiometric = () => {
   const [capturedImage, setCapturedImage] = React.useState(null);
@@ -14,7 +15,8 @@ export const LoginWithBiometric = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [loginWithBiometrics, result] = useLoginWithBiometricsMutation();
-
+  const username = useSelector((state) => state.user.username);
+  const { data: nationalIdData } = useGetNationalIdQuery(username);
   const startCamera = async () => {
     console.log("starting webcam...");
     setError("");
@@ -117,6 +119,13 @@ export const LoginWithBiometric = () => {
       setLoading(false);
     }
   };
+
+  useEffect(()=>{
+    if(data){
+        setNationalIdPhotoUrl(data.photoUrl);
+        console.log("National ID photo URL:", data.photoUrl);
+      }
+  },[data])
 
   return (
     <div className={styles.container}>

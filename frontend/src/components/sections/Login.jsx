@@ -2,6 +2,8 @@ import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
 import { useLoginMutation } from "../../api/restApi/authApi";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../../features/auth/authSlice";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -10,6 +12,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [login, result] = useLoginMutation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // Handle credentials submission
   const handleCredentialsSubmit = async (e) => {
@@ -29,6 +32,10 @@ function Login() {
       console.log("verified:", res.verified);
       if (res.verified == true) {
         console.log("verified");
+        // Dispatch user data to Redux store
+        dispatch(setCredentials({
+           username: res.username,
+        }))
         navigate("/login/biometric");
       } else {
         setError(data.error || "Invalid username or password.");
