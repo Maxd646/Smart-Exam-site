@@ -12,14 +12,14 @@ export const authApi = createApi({
     //login endpoint
     login: build.mutation({
       query: (credentials) => ({
-        url: "/auth/login",
+        url: "/authentication/verify_credentials/",
         method: "POST",
         body: credentials,
       }),
       transformResponse: (response) => {
         console.log("Login response:", response);
         //handle login response
-        return response.data;
+        return response;
       },
       transformErrorResponse: (error) => {
         //handle error response
@@ -35,14 +35,14 @@ export const authApi = createApi({
     //login with biometrics
     loginWithBiometrics: build.mutation({
       query: (credentials) => ({
-        url: "/auth/login/biometrics",
+        url: "/authentication/verify_biometric/",
         method: "POST",
         body: credentials,
       }),
       transformResponse: (response) => {
         console.log("Biometric login response:", response);
         //handle biometric login response
-        return response.data;
+        return response;
       },
       transformErrorResponse: (error) => {
         //handle error response

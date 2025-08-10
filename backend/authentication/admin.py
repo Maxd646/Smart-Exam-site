@@ -1,6 +1,10 @@
 from django.contrib import admin
 from .models import UserProfile, ExamSession, Alert
 
+admin.site.site_header = 'Anti-Cheating Admin management system'
+admin.site.site_title = 'Anti-Cheating Admin Portal'
+admin.site.index_title = 'Welcome to the Anti-Cheating Admin Portal'
+
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'full_name', 'national_id', 'age', 'education_level', 'rf_identifier', 'blocked', 'national_id_photo')

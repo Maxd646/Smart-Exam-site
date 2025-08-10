@@ -1,9 +1,4 @@
-# 🛡️ SmartGuard Exam Proctor
-
-## Contributors:
-
-- Daniel Kebede
-- Alehegne Geta
+# 🛡️ SmartGuard Exam
 
 ## 🚀 Project Status: **COMPLETED & READY FOR DEPLOYMENT**
 
@@ -321,11 +316,16 @@ This tests:
 | Multi-Biometric Login | ✅ Complete | Face, Iris, Fingerprint support      |
 | Fayda Integration     | ✅ Complete | Post-login redirect and callback     |
 | Exam Interface        | ✅ Complete | Professional exam environment        |
-| Behavioral Monitoring | ✅ Complete | AI-powered webcam monitoring         |
+| Behavioral Monitoring | Incomplete  | AI-powered webcam monitoring         |
 | Real-time Alerts      | ✅ Complete | Comprehensive supervisor dashboard   |
-| Device Detection      | ✅ Complete | RF and network scanning              |
-| Security Features     | ✅ Complete | Tab switching, copy/paste prevention |
+| Device Detection      | Incomplete  | RF and network scanning              |
+| Security Features     | Incomplete  | Tab switching, copy/paste prevention |
 
 ---
 
 > 🎉 **Ready for Production Deployment** - This system combines **identity verification**, **AI monitoring**, and **real-time security** to create a trustworthy online examination platform for Ethiopia.
+
+## Contributors:
+
+- Daniel Kebede(https://github.com/Maxd646)
+- Alehegne Geta(https://github.com/Alehegne)

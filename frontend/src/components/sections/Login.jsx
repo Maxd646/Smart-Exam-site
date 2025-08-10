@@ -1,12 +1,14 @@
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
+import { useLoginMutation } from "../../api/restApi/authApi";
 
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [login, result] = useLoginMutation();
   const navigate = useNavigate();
 
   // Handle credentials submission
@@ -21,20 +23,12 @@ function Login() {
     setLoading(true);
     setError("");
     try {
-      // const res = await fetch(
-      //   "http://localhost:8000/authentication/verify-credentials/",
-      //   {
-      //     method: "POST",
-      //     headers: { "Content-Type": "application/json" },
-      //     body: JSON.stringify({ username, password }),
-      //   }
-      // );
-      // const data = await res.json();
-      // if (res.ok && data.verified) {
-      if (true) {
-        // setStep(2);
-        // startCamera();
-        //navigate to login with credentials
+      console.log("proble");
+      const res = await login({ username, password }).unwrap();
+      console.log("Login successful:", res);
+      console.log("verified:", res.verified);
+      if (res.verified == true) {
+        console.log("verified");
         navigate("/login/biometric");
       } else {
         setError(data.error || "Invalid username or password.");

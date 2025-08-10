@@ -14,7 +14,9 @@ function AdminDashboard() {
     if (!loggedIn) return;
     const fetchAlerts = async () => {
       setLoading(true);
-      const res = await fetch("http://localhost:8000/authentication/alerts/");
+      const res = await fetch(
+        "http://localhost:8000/authentication/list_alerts/"
+      );
       const data = await res.json();
       setAlerts(data.alerts || []);
       setLoading(false);
@@ -43,7 +45,7 @@ function AdminDashboard() {
   };
 
   const handleBlockUser = async (username) => {
-    await fetch("http://localhost:8000/authentication/block-user/", {
+    await fetch("http://localhost:8000/authentication/block_user/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, block: true }),
