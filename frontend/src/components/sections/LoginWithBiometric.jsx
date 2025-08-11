@@ -18,6 +18,7 @@ export const LoginWithBiometric = () => {
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+
   const username = useSelector((state) => state.user.username);
 
   // ✅ Only run query if username exists
@@ -98,6 +99,7 @@ export const LoginWithBiometric = () => {
       setNationalIdPhotoUrl(nationalIdData.photo_url);
     }
   }, [nationalIdData]);
+
   return (
     <div className={styles.container}>
       <div className={styles.body}>

@@ -1,10 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-<<<<<<< HEAD
  const initialState = {
-=======
-initialState = {
->>>>>>> 4446e73b0118fb75befe699b53f4db1b3adc2b38
     username: "",
     nationalId: "",
     biometricPhoto: null,
