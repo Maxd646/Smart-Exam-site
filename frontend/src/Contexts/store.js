@@ -12,6 +12,6 @@ export const store = configureStore({
   ) =>
     getDefaultMiddleware().concat(
       authApi.middleware,
-      // examMonitorApi.middleware
+      examMonitorApi.middleware
     ),
 });
