@@ -64,8 +64,6 @@ export const authApi = createApi({
       async onQueryStarted() {}, //optional, can be used for optimistic updates
       async onCacheEntryAdded() {}, //optional, can be used to manage cache
     }),
-<<<<<<< HEAD
-
     getNationalId: build.query({
      query: (username) => ({
     url: `/authentication/national_id_photo/${username}/`,
@@ -87,28 +85,6 @@ export const authApi = createApi({
     providesTags: ["User"], //tags for cache invalidation
   }),
   }),
-=======
-    getNationalId: build.query({
-        query: (username) => ({
-          url: `/get_national_id/${username}/`,
-          method:"GET",
-        }),
-        transformResponse: (response) => {
-          //handle response
-          return response;
-        },
-        transformErrorResponse: (error) => {
-          //handle error response
-          console.error("Get National ID error:", error);
-          return {
-            message: error.data.message,
-            status: error.status,
-          };
-        },
-
-    })
-  }), 
->>>>>>> 4446e73b0118fb75befe699b53f4db1b3adc2b38
 });
 
 export const {

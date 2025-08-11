@@ -1,14 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./LoginWithBiometric.module.css";
-<<<<<<< HEAD
 import {
   useGetNationalIdQuery,
   useLoginWithBiometricsMutation,
 } from "../../api/restApi/authApi";
-=======
-import { useGetNationalIdQuery, useLoginWithBiometricsMutation } from "../../api/restApi/authApi";
->>>>>>> 4446e73b0118fb75befe699b53f4db1b3adc2b38
 import { useSelector } from "react-redux";
 
 export const LoginWithBiometric = () => {
@@ -22,8 +18,6 @@ export const LoginWithBiometric = () => {
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-<<<<<<< HEAD
-
   const username = useSelector((state) => state.user.username);
 
   // ✅ Only run query if username exists
@@ -34,11 +28,6 @@ export const LoginWithBiometric = () => {
   const [loginWithBiometrics] = useLoginWithBiometricsMutation();
 
   // Start webcam
-=======
-  const [loginWithBiometrics, result] = useLoginWithBiometricsMutation();
-  const username = useSelector((state) => state.user.username);
-  const { data: nationalIdData } = useGetNationalIdQuery(username);
->>>>>>> 4446e73b0118fb75befe699b53f4db1b3adc2b38
   const startCamera = async () => {
     setError("");
     try {
@@ -104,22 +93,11 @@ export const LoginWithBiometric = () => {
       setLoading(false);
     }
   };
-
-<<<<<<< HEAD
   useEffect(() => {
     if (nationalIdData?.photo_url) {
       setNationalIdPhotoUrl(nationalIdData.photo_url);
     }
   }, [nationalIdData]);
-=======
-  useEffect(()=>{
-    if(data){
-        setNationalIdPhotoUrl(data.photoUrl);
-        console.log("National ID photo URL:", data.photoUrl);
-      }
-  },[data])
->>>>>>> 4446e73b0118fb75befe699b53f4db1b3adc2b38
-
   return (
     <div className={styles.container}>
       <div className={styles.body}>
