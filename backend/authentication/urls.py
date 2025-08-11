@@ -15,10 +15,12 @@ from . views import (
     BlockUserView,
     UpdatePhotoView,
     NationalIDPhotoView,
+    logoutView
 )
 
 
 urlpatterns = [
+    path('logout/', logoutView.as_view(), name='logout'),
     path('start_exam_session/', StartExamSessionView.as_view(), name='start_exam_session'),
     path('upload_face_image/', UploadFaceImageView.as_view(), name='upload_face_image'),
     path('register_with_national_id/', RegisterWithNationalIDView.as_view(), name='register_with_national_id'),
@@ -33,8 +35,7 @@ urlpatterns = [
     path('verifayda_login/', Verifayda_loginView.as_view(), name='verifayda_login'),
     path('block_user/', BlockUserView.as_view(), name='block_user'),
     path('update_photo/', UpdatePhotoView.as_view(), name='update_photo'),
-    path('national_id_photo/', NationalIDPhotoView.as_view(), name='national_id_photo'),
- 
+    path('national_id_photo/<str:username>/', NationalIDPhotoView.as_view(), name='national_id_photo'),
 ]
 
 #API endpoints for starting the exam session, uploading face images, registering with national ID, verifying credentials, biometric verification, logging in with face, iris, or fingerprint, listing alerts, handling VeriFayda callbacks, starting behavioral monitoring, Verifayda login, blocking users, updating photos, and managing national ID photos.

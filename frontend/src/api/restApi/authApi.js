@@ -1,6 +1,7 @@
 import baseQury from "./basequery";
 
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+
 export const authApi = createApi({
   reducerPath: "authApi", //name of the slice, used while configuring in the store
   baseQuery: fetchBaseQuery({
@@ -57,12 +58,33 @@ export const authApi = createApi({
     //logout endpoint
     logout: build.mutation({
       query: () => ({
-        url: "/auth/logout",
+        url: "/authentication/logout",
         method: "POST",
       }),
       async onQueryStarted() {}, //optional, can be used for optimistic updates
       async onCacheEntryAdded() {}, //optional, can be used to manage cache
     }),
+
+    getNationalId: build.query({
+     query: (username) => ({
+    url: `/authentication/national_id_photo/${username}/`,
+    method: "GET",
+     }),
+    transformResponse: (response) => {
+    // handle response here if needed
+    return response;
+  },
+  transformErrorResponse: (error) => {
+    console.error("Get National ID error:", error);
+    return {
+      message: error.data?.message || 'Unknown error',
+      status: error.status,
+    };
+  },          
+    async onQueryStarted() {}, //optional, can be used for optimistic updates
+    async onCacheEntryAdded() {}, //optional, can be used to manage cache
+    providesTags: ["User"], //tags for cache invalidation
+  }),
   }),
 });
 
@@ -70,4 +92,5 @@ export const {
   useLoginMutation,
   useLoginWithBiometricsMutation,
   useLogoutMutation,
+  useGetNationalIdQuery
 } = authApi;
