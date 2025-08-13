@@ -3,9 +3,6 @@ from django.db import models
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    face_encoding = models.BinaryField(null=True, blank=True)
-    iris_encoding = models.BinaryField(null=True, blank=True)  # NEW: for iris biometrics
-    fingerprint_encoding = models.BinaryField(null=True, blank=True)  # NEW: for fingerprint biometrics
     rf_identifier = models.CharField(max_length=255, null=True, blank=True)  # optional RF tag/device ID
     blocked = models.BooleanField(default=False)
     national_id = models.CharField(max_length=32, null=True, blank=True)
@@ -13,8 +10,13 @@ class UserProfile(models.Model):
     age = models.IntegerField(null=True, blank=True)
     education_level = models.CharField(max_length=64, null=True, blank=True)
     national_id_photo = models.ImageField(upload_to='national_id_photos/', null=True, blank=True)
+    face_encoding = models.BinaryField(null=True, blank=True)
+    extracted_face_photo = models.ImageField(upload_to='extracted_faces/', null=True, blank=True)
 
+    iris_encoding = models.BinaryField(null=True, blank=True)      # optional
+    fingerprint_encoding = models.BinaryField(null=True, blank=True)  # optional
 
+    blocked = models.BooleanField(default=False)
     def __str__(self):
         return self.user.username
 
@@ -34,7 +36,6 @@ class Alert(models.Model):
     alert_type = models.CharField(max_length=50)
     reason = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-    # Advanced fields for device and location info
     device_mac = models.CharField(max_length=50, null=True, blank=True)
     device_type = models.CharField(max_length=50, null=True, blank=True)
     signal_strength = models.IntegerField(null=True, blank=True)

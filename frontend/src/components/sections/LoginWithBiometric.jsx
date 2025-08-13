@@ -13,9 +13,10 @@ export const LoginWithBiometric = () => {
   const [loading, setLoading] = useState(false);
   const [nationalIdPhotoUrl, setNationalIdPhotoUrl] = useState(null);
   const [showMatchResult, setShowMatchResult] = useState(false);
-  const [matchSuccess, setMatchSuccess] = useState(null);
+  const [matchSuccess, setMatchSuccess] = useState(false);
   const [error, setError] = useState("");
-
+  const [started, setStarted] = useState(false);
+  const navigate = useNavigate();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -59,6 +60,7 @@ export const LoginWithBiometric = () => {
 
   // Send to backend
   const handleAutoLogin = async (imageData) => {
+    setStarted(true);
     if (!username) {
       setError("Username not found. Please login first.");
       return;
@@ -66,7 +68,6 @@ export const LoginWithBiometric = () => {
 
     setLoading(true);
     setError("");
-    setShowMatchResult(false);
 
     try {
       // ✅ Remove the prefix for backend
@@ -77,9 +78,14 @@ export const LoginWithBiometric = () => {
         biometric_type: biometricType,
         biometric_data: cleanBase64,
       }).unwrap();
-
+      console.log("Biometric login response:", res);
+      if (!res.success) {
+        throw new Error(res.message || "Biometric verification failed.");
+      }
       setShowMatchResult(true);
       setMatchSuccess(true);
+      //redirec to exam page
+      navigate("/exam");
     } catch (err) {
       setShowMatchResult(true);
       setMatchSuccess(false);
@@ -134,7 +140,7 @@ export const LoginWithBiometric = () => {
           <div
             className={matchSuccess ? styles.matchSuccess : styles.matchFailure}
           >
-            {matchSuccess ? "✅ Face Match" : "❌ Face Does Not Match"}
+            {matchSuccess ? "Face Match" : "Face Does Not Match"}
           </div>
         )}
 
@@ -159,7 +165,11 @@ export const LoginWithBiometric = () => {
             onClick={startCamera}
             className={styles.secondaryButtonStyle}
           >
-            {loading ? "Processing..." : "Start Automatic Biometric Capture"}
+            {loading
+              ? "Processing..."
+              : started
+              ? "Retry"
+              : "Start Automatic Biometric Capture"}
           </button>
         </div>
 
@@ -167,6 +177,15 @@ export const LoginWithBiometric = () => {
         <div style={{ marginBottom: "20px" }}>
           <video ref={videoRef} autoPlay className={styles.video} />
           <canvas ref={canvasRef} style={{ display: "none" }} />
+        </div>
+        {/* retry */}
+        <div>
+          {!loading && error && (
+            <p style={{ color: "red", marginBottom: "10px" }}>
+              your face does not match with the national id photo, please try
+              again.
+            </p>
+          )}
         </div>
 
         {/* Error */}

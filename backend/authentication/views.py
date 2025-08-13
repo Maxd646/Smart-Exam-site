@@ -2,19 +2,186 @@ from django.views import View
 from django.contrib.auth import authenticate
 from django.utils.decorators import method_decorator
 import numpy as np
+from django.conf import settings
+from .face_recognition import compare_faces
 import face_recognition
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import UserProfile, ExamSession, Alert
-from .face_recognition import encode_face_from_base64
+# from .face_recognition import encode_face_from_base64
 from django.views.decorators.http import require_GET
-import os, json, requests, base64
+import os, json, requests, base64,io
 from django.shortcuts import redirect
-from django.conf import settings
 from urllib.parse import urlencode
 from django.core.files.storage import default_storage
+# from .face_id_processing import extract_face_encoding_from_id, extract_and_save_face_image
+
+
+# # --- Face recognition helpers ---
+# def encode_face_from_base64(base64_str):
+#     try:
+#         image_data = base64.b64decode(base64_str.split(',')[-1])
+#         image = face_recognition.load_image_file(io.BytesIO(image_data))
+#         encodings = face_recognition.face_encodings(image)
+#         if encodings:
+#             return encodings[0].tobytes()
+#         else:
+#             return None
+#     except Exception as e:
+#         print(f"Error encoding face from base64: {e}")
+#         return None
+
+import face_recognition
+import base64
+import numpy as np
+from io import BytesIO
+from PIL import Image
+
+def compare_faces(known_image_path, unknown_base64_image):
+    """
+    Compare a stored image file (known_image_path) with a live captured base64 image
+    Returns True if faces match, False otherwise.
+    """
+    try:
+        # Load known image from file
+        known_image = face_recognition.load_image_file(known_image_path)
+        known_encodings = face_recognition.face_encodings(known_image)
+        if not known_encodings:
+            return False  
+        known_encoding = known_encodings[0]
+
+        # Decode unknown base64 image
+        header, encoded = unknown_base64_image.split(",", 1)  
+        decoded = base64.b64decode(encoded)
+        unknown_image = np.array(Image.open(BytesIO(decoded)))
+
+        # Get face encoding of unknown image
+        unknown_encodings = face_recognition.face_encodings(unknown_image)
+        if not unknown_encodings:
+            return False  # No face detected in live image
+        unknown_encoding = unknown_encodings[0]
+
+        # Compare faces
+        results = face_recognition.compare_faces([known_encoding], unknown_encoding)
+        return results[0]
+    except Exception as e:
+        print("Face comparison error:", e)
+        return False
+
+
+# --- Registration ---
+@method_decorator(csrf_exempt, name='dispatch')
+class RegisterWithNationalIDView(View):
+    def post(self, request, *args, **kwargs):
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        full_name = request.POST.get("full_name")
+        national_id = request.POST.get("national_id")
+        photo = request.FILES.get("national_id_photo")
+        address = request.POST.get("address")
+        age = request.POST.get("age")
+        education_level = request.POST.get("education_level")
+        rf_identifier = request.POST.get("rf_identifier")
+
+
+        if not all([username, password, full_name, national_id, photo,address, age, education_level, rf_identifier]):
+            return JsonResponse({"error": "All fields are required."}, status=400)
+
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"error": "Username already exists."}, status=400)
+
+        user = User.objects.create_user(username=username, password=password)
+        profile = UserProfile.objects.create(
+            user=user,
+            full_name=full_name,
+            national_id=national_id,
+            national_id_photo=photo
+        )
+
+        # encoding = extract_face_encoding_from_id(profile.national_id_photo)
+        # if not encoding:
+        #     user.delete()
+        #     return JsonResponse({"error": "No face detected in the National ID photo."}, status=400)
+        # profile.face_encoding = encoding
+
+        # success = extract_and_save_face_image(profile.national_id_photo, profile)
+        # if not success:
+        #     user.delete()
+        #     return JsonResponse({"error": "Failed to extract face image from the National ID photo."}, status=400)
+
+        # profile.save()
+        return JsonResponse({"success": True, "message": "Student registered successfully."})
+
+
+# --- Serve national ID and extracted face ---
+@method_decorator(csrf_exempt, name='dispatch')
+class NationalIDPhotoView(View):
+    def get(self, request, *args, **kwargs):
+        username = kwargs.get('username')
+        if not username:
+            return JsonResponse({'error': 'Username required.'}, status=400)
+        try:
+            user = User.objects.get(username=username)
+            profile = UserProfile.objects.get(user=user)
+
+            photo_url = None
+
+            if profile.national_id_photo:
+                photo_url = request.build_absolute_uri(profile.national_id_photo.url)
+            # if profile.extracted_face_photo:
+            #     face_url = request.build_absolute_uri(profile.extracted_face_photo.url)
+
+            return JsonResponse({
+                'photo_url': photo_url,
+                'username': username,
+                'message': 'National ID photo and extracted face photo retrieved successfully.'
+            })
+        except (User.DoesNotExist, UserProfile.DoesNotExist):
+            return JsonResponse({'error': 'User not found.'}, status=404)
+
+
+# --- Biometric login with live face ---
+@method_decorator(csrf_exempt, name='dispatch')
+class VerifyBiometricView(View):
+    def post(self, request):
+        """
+        Expects JSON:
+        {
+            "username": "...",
+            "biometric_data": "data:image/jpeg;base64,...."
+        }
+        """
+        try:
+            data = json.loads(request.body)
+            username = data.get("username")
+            biometric_data = data.get("biometric_data")
+
+            if not username or not biometric_data:
+                return JsonResponse({"error": "Username and biometric data are required."}, status=400)
+
+            try:
+                profile = UserProfile.objects.get(user__username=username)
+            except UserProfile.DoesNotExist:
+                return JsonResponse({"error": "User not found"}, status=404)
+            
+            image_path=profile.national_id_photo.path
+            biometric_base64 =data.get("biometric_data")
+
+            match=compare_faces(image_path, biometric_base64)
+            if match:
+                return JsonResponse({"success": True, "message": "Biometric verification passed"})
+            else:
+                return JsonResponse({"success": False, "message": "Biometric verification failed"})
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON format"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    def get(self, request, *args, **kwargs):
+        return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -51,21 +218,13 @@ class VerifyCredentialsView(View):
                     'step': 'blocked'
                 }, status=403)
 
-            has_face = profile.face_encoding is not None
-            has_iris = profile.iris_encoding is not None
-            has_fingerprint = profile.fingerprint_encoding is not None
-
             return JsonResponse({
                 'verified': True,
                 'username': username,
                 'step': 'credentials_verified',
                 'photo_url': request.build_absolute_uri(profile.national_id_photo.url),
                 'message': 'Credentials verified. Please provide biometric data.',
-                'available_biometrics': {
-                    'face': has_face,
-                    'iris': has_iris,
-                    'fingerprint': has_fingerprint
-                }
+
             })
         except UserProfile.DoesNotExist:
             return JsonResponse({
@@ -78,171 +237,170 @@ class VerifyCredentialsView(View):
         return JsonResponse({'error': 'Invalid request method.'}, status=405)
     
 
-@method_decorator(csrf_exempt, name='dispatch')
-class VerifyBiometricView(View):
-    """Step 2: Verify biometric data matches the registered user"""
+# @method_decorator(csrf_exempt, name='dispatch')
+# class VerifyBiometricView(View):
+#     """Step 2: Verify biometric data matches the registered user"""
 
-    def post(self, request, *args, **kwargs):
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON.'}, status=400)
+#     def post(self, request, *args, **kwargs):
+#         try:
+#             data = json.loads(request.body)
+#         except json.JSONDecodeError:
+#             return JsonResponse({'error': 'Invalid JSON.'}, status=400)
 
-        username = data.get('username')
-        biometric_type = data.get('biometric_type')
-        biometric_data = data.get('biometric_data')  # base64 string
-        if not username or not biometric_type or not biometric_data:
-            return JsonResponse({'error': 'Username, biometric type, and biometric data required.'}, status=400)
-        try:
-            user = User.objects.get(username=username)
-            profile = UserProfile.objects.get(user=user)
-        except (User.DoesNotExist, UserProfile.DoesNotExist):
-            return JsonResponse({'error': 'User not found.'}, status=404)   
-        if profile.blocked:
-            return JsonResponse({'verified': False, 'error': 'User is blocked by supervisor.', 'step': 'blocked'}, status=403)
-        if biometric_type == 'face':
-            from .face_recognition import compare_faces
-            match = compare_faces(profile.face_encoding, biometric_data)
-            if not match:
-                return JsonResponse({
-                    'verified': False,
-                    'error': 'Face does not match registered user.',
-                    'step': 'biometric_failed'
-                }, status=401)
-        elif biometric_type == 'iris':
-            # Placeholder for iris comparison
-            match = profile.iris_encoding is not None and biometric_data == 'SIMULATED_MATCH'
-            if not match:
-                return JsonResponse({
-                    'verified': False,
-                    'error': 'Iris does not match registered user.',
-                    'step': 'biometric_failed'
-                }, status=401)
-        elif biometric_type == 'fingerprint':
-            # Placeholder for fingerprint comparison
-            match = profile.fingerprint_encoding is not None and biometric_data == 'SIMULATED_MATCH'
-            if not match:
-                return JsonResponse({
-                    'verified': False,
-                    'error': 'Fingerprint does not match registered user.',
-                    'step': 'biometric_failed'
-                }, status=401)  
-        else:
-            return JsonResponse({'error': 'Invalid biometric type.'}, status=400)
-        # Biometric verification successful
-        return JsonResponse({
-            'verified': True,
-            'username': username,                                                                               
+#         username = data.get('username')
+#         biometric_type = data.get('biometric_type')
+#         biometric_data = data.get('biometric_data')  # base64 string
+#         if not username or not biometric_type or not biometric_data:
+#             return JsonResponse({'error': 'Username, biometric type, and biometric data required.'}, status=400)
+#         try:
+#             user = User.objects.get(username=username)
+#             profile = UserProfile.objects.get(user=user)
+#         except (User.DoesNotExist, UserProfile.DoesNotExist):
+#             return JsonResponse({'error': 'User not found.'}, status=404)   
+#         if profile.blocked:
+#             return JsonResponse({'verified': False, 'error': 'User is blocked by supervisor.', 'step': 'blocked'}, status=403)
+#         if biometric_type == 'face':
+#             match = compare_faces(profile.face_encoding, biometric_data)
+#             if not match:
+#                 return JsonResponse({
+#                     'verified': False,
+#                     'error': 'Face does not match registered user.',
+#                     'step': 'biometric_failed'
+#                 }, status=401)
+#         elif biometric_type == 'iris':
+#             # Placeholder for iris comparison
+#             match = profile.iris_encoding is not None and biometric_data == 'SIMULATED_MATCH'
+#             if not match:
+#                 return JsonResponse({
+#                     'verified': False,
+#                     'error': 'Iris does not match registered user.',
+#                     'step': 'biometric_failed'
+#                 }, status=401)
+#         elif biometric_type == 'fingerprint':
+#             # Placeholder for fingerprint comparison
+#             match = profile.fingerprint_encoding is not None and biometric_data == 'SIMULATED_MATCH'
+#             if not match:
+#                 return JsonResponse({
+#                     'verified': False,
+#                     'error': 'Fingerprint does not match registered user.',
+#                     'step': 'biometric_failed'
+#                 }, status=401)  
+#         else:
+#             return JsonResponse({'error': 'Invalid biometric type.'}, status=400)
+#         # Biometric verification successful
+#         return JsonResponse({
+#             'verified': True,
+#             'username': username,                                                                               
 
-            'biometric_type': biometric_type,
-            'step': 'biometric_verified',
-            'message': 'Biometric verification successful. Redirecting to exam...'
-        })
-    def get(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Invalid request method.'}, status=405)
+#             'biometric_type': biometric_type,
+#             'step': 'biometric_verified',
+#             'message': 'Biometric verification successful. Redirecting to exam...'
+#         })
+#     def get(self, request, *args, **kwargs):
+#         return JsonResponse({'error': 'Invalid request method.'}, status=405)
     
     
 
-@method_decorator(csrf_exempt, name='dispatch')
-class LoginWithFaceView(View):
-    """Legacy function - kept for backward compatibility"""
+# @method_decorator(csrf_exempt, name='dispatch')
+# class LoginWithFaceView(View):
+#     """Legacy function - kept for backward compatibility"""
 
-    def post(self, request, *args, **kwargs):
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON.'}, status=400)
+#     def post(self, request, *args, **kwargs):
+#         try:
+#             data = json.loads(request.body)
+#         except json.JSONDecodeError:
+#             return JsonResponse({'error': 'Invalid JSON.'}, status=400)
 
-        username = data.get('username')
-        password = data.get('password')
-        image_data = data.get('image')
-        if not username or not password or not image_data:
-            return JsonResponse({'error': 'Username, password, and image required.'}, status=400)   
-        user = authenticate(username=username, password=password)
-        if user is None:
-            return JsonResponse({'verified': False, 'error': 'Invalid username or password.'}, status=401)
-        try:
-            profile = UserProfile.objects.get(user=user)
-        except UserProfile.DoesNotExist:
-            return JsonResponse({'verified': False, 'error': 'User profile not found.'}, status=404)    
-        from .face_recognition import compare_faces
-        match = compare_faces(profile.face_encoding, image_data)
-        if match:
-            return JsonResponse({'verified': True, 'username': username})
-        else:
-            return JsonResponse({'verified': False, 'error': 'Face does not match.'}, status=401)
-    def get(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Invalid request method.'}, status=405)
+#         username = data.get('username')
+#         password = data.get('password')
+#         image_data = data.get('image')
+#         if not username or not password or not image_data:
+#             return JsonResponse({'error': 'Username, password, and image required.'}, status=400)   
+#         user = authenticate(username=username, password=password)
+#         if user is None:
+#             return JsonResponse({'verified': False, 'error': 'Invalid username or password.'}, status=401)
+#         try:
+#             profile = UserProfile.objects.get(user=user)
+#         except UserProfile.DoesNotExist:
+#             return JsonResponse({'verified': False, 'error': 'User profile not found.'}, status=404)    
+#         from .face_recognition import compare_faces
+#         match = compare_faces(profile.face_encoding, image_data)
+#         if match:
+#             return JsonResponse({'verified': True, 'username': username})
+#         else:
+#             return JsonResponse({'verified': False, 'error': 'Face does not match.'}, status=401)
+#     def get(self, request, *args, **kwargs):
+#         return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class LoginWithIrisView(View):
-    """Legacy function - kept for backward compatibility"""
+# @method_decorator(csrf_exempt, name='dispatch')
+# class LoginWithIrisView(View):
+#     """Legacy function - kept for backward compatibility"""
 
-    def post(self, request, *args, **kwargs):
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON.'}, status=400)
+#     def post(self, request, *args, **kwargs):
+#         try:
+#             data = json.loads(request.body)
+#         except json.JSONDecodeError:
+#             return JsonResponse({'error': 'Invalid JSON.'}, status=400)
 
-        username = data.get('username')
-        password = data.get('password')
-        iris_data = data.get('iris')  # base64 string
-        if not username or not password or not iris_data:
-            return JsonResponse({'error': 'Username, password, and iris image required.'}, status=400)
-        user = authenticate(username=username, password=password)
-        if user is None:
-            return JsonResponse({'verified': False, 'error': 'Invalid username or password.'}, status=401)
-        try:
-            profile = UserProfile.objects.get(user=user)
-        except UserProfile.DoesNotExist:
-            return JsonResponse({'verified': False, 'error': 'User profile not found.'}, status=404)
+#         username = data.get('username')
+#         password = data.get('password')
+#         iris_data = data.get('iris')  # base64 string
+#         if not username or not password or not iris_data:
+#             return JsonResponse({'error': 'Username, password, and iris image required.'}, status=400)
+#         user = authenticate(username=username, password=password)
+#         if user is None:
+#             return JsonResponse({'verified': False, 'error': 'Invalid username or password.'}, status=401)
+#         try:
+#             profile = UserProfile.objects.get(user=user)
+#         except UserProfile.DoesNotExist:
+#             return JsonResponse({'verified': False, 'error': 'User profile not found.'}, status=404)
 
-        # Placeholder for iris comparison logic
-        # Replace with actual iris recognition logic        
-        match = profile.iris_encoding is not None and iris_data == 'SIMULATED_MATCH'  # Simulate match
-        if match:
-            return JsonResponse({'verified': True, 'username': username, 'biometric': 'iris'})
-        else:
-            return JsonResponse({'verified': False, 'error': 'Iris does not match.'}, status=401)
-    def get(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Invalid request method.'}, status=405)
+#         # Placeholder for iris comparison logic
+#         # Replace with actual iris recognition logic        
+#         match = profile.iris_encoding is not None and iris_data == 'SIMULATED_MATCH'  # Simulate match
+#         if match:
+#             return JsonResponse({'verified': True, 'username': username, 'biometric': 'iris'})
+#         else:
+#             return JsonResponse({'verified': False, 'error': 'Iris does not match.'}, status=401)
+#     def get(self, request, *args, **kwargs):
+#         return JsonResponse({'error': 'Invalid request method.'}, status=405)
     
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class LoginWithFingerprintView(View):
-    """Legacy function - kept for backward compatibility"""
+# @method_decorator(csrf_exempt, name='dispatch')
+# class LoginWithFingerprintView(View):
+#     """Legacy function - kept for backward compatibility"""
 
-    def post(self, request, *args, **kwargs):
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON.'}, status=400)
+#     def post(self, request, *args, **kwargs):
+#         try:
+#             data = json.loads(request.body)
+#         except json.JSONDecodeError:
+#             return JsonResponse({'error': 'Invalid JSON.'}, status=400)
 
-        username = data.get('username')
-        password = data.get('password')
-        fingerprint_data = data.get('fingerprint')
-        if not username or not password or not fingerprint_data:
-            return JsonResponse({'error': 'Username, password, and fingerprint data required.'}, status=400)
+#         username = data.get('username')
+#         password = data.get('password')
+#         fingerprint_data = data.get('fingerprint')
+#         if not username or not password or not fingerprint_data:
+#             return JsonResponse({'error': 'Username, password, and fingerprint data required.'}, status=400)
 
-        user = authenticate(username=username, password=password)
-        if user is None:
-            return JsonResponse({'verified': False, 'error': 'Invalid username or password.'}, status=401)
-        try:
-            profile = UserProfile.objects.get(user=user)
-        except UserProfile.DoesNotExist:
-            return JsonResponse({'verified': False, 'error': 'User profile not found.'}, status=404)    
-        # Placeholder for fingerprint comparison logic
-        # Replace with actual fingerprint recognition logic
-        match = profile.fingerprint_encoding is not None and fingerprint_data == 'SIMULATED_MATCH'  # Simulate match
-        if match:
-            return JsonResponse({'verified': True, 'username': username, 'biometric': 'fingerprint'})
-        else:
-            return JsonResponse({'verified': False, 'error': 'Fingerprint does not match.'}, status=401)
-    def get(self, request, *args, **kwargs):
-            return JsonResponse({'error': 'Invalid request method.'}, status=405) 
+#         user = authenticate(username=username, password=password)
+#         if user is None:
+#             return JsonResponse({'verified': False, 'error': 'Invalid username or password.'}, status=401)
+#         try:
+#             profile = UserProfile.objects.get(user=user)
+#         except UserProfile.DoesNotExist:
+#             return JsonResponse({'verified': False, 'error': 'User profile not found.'}, status=404)    
+#         # Placeholder for fingerprint comparison logic
+#         # Replace with actual fingerprint recognition logic
+#         match = profile.fingerprint_encoding is not None and fingerprint_data == 'SIMULATED_MATCH'  # Simulate match
+#         if match:
+#             return JsonResponse({'verified': True, 'username': username, 'biometric': 'fingerprint'})
+#         else:
+#             return JsonResponse({'verified': False, 'error': 'Fingerprint does not match.'}, status=401)
+#     def get(self, request, *args, **kwargs):
+#             return JsonResponse({'error': 'Invalid request method.'}, status=405) 
   
 @method_decorator(csrf_exempt, name='dispatch')    
 class logoutView(View):
@@ -360,28 +518,28 @@ class StartBehavioralMonitoringView(View):
 def get_env(key, default=None):
     return os.environ.get(key, getattr(settings, key, default))
 
-@method_decorator(csrf_exempt, name='dispatch')
-class NationalIDPhotoView(View):
-    """Get the national ID photo """
+# @method_decorator(csrf_exempt, name='dispatch')
+# class NationalIDPhotoView(View):
+#     """Get the national ID photo """
 
-    def get(self, request, *args, **kwargs):
-        username = kwargs.get('username')
-        if not username:
-            return JsonResponse({'error': 'Username required.'}, status=400)
-        try:
-            user = User.objects.get(username=username)
-            profile = UserProfile.objects.get(user=user)
-            if profile.national_id_photo:
-                photo_url = request.build_absolute_uri(profile.national_id_photo.url)
-                return JsonResponse({
-                    'photo_url': photo_url,
-                    'username': username,   
-                    'message': 'National ID photo retrieved successfully.'
-                    })
-            else:
-                return JsonResponse({'photo_url': None, 'error': 'No national ID photo found.'}, status=404)
-        except (User.DoesNotExist, UserProfile.DoesNotExist):
-            return JsonResponse({'error': 'User not found.'}, status=404)
+#     def get(self, request, *args, **kwargs):
+#         username = kwargs.get('username')
+#         if not username:
+#             return JsonResponse({'error': 'Username required.'}, status=400)
+#         try:
+#             user = User.objects.get(username=username)
+#             profile = UserProfile.objects.get(user=user)
+#             if profile.national_id_photo:
+#                 photo_url = request.build_absolute_uri(profile.national_id_photo.url)
+#                 return JsonResponse({
+#                     'photo_url': photo_url,
+#                     'username': username,   
+#                     'message': 'National ID photo retrieved successfully.'
+#                     })
+#             else:
+#                 return JsonResponse({'photo_url': None, 'error': 'No national ID photo found.'}, status=404)
+#         except (User.DoesNotExist, UserProfile.DoesNotExist):
+#             return JsonResponse({'error': 'User not found.'}, status=404)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -400,11 +558,7 @@ class UpdatePhotoView(View):
         try:
             user = request.user
             profile = UserProfile.objects.get(user=user)
-            face_encoding = encode_face_from_base64(image_data)
-            if face_encoding is None:
-                return JsonResponse({'error': 'No face detected in the new photo.'}, status=400)
-            profile.face_encoding = face_encoding
-            profile.save()
+            photo=user.username + '_profile_photo.jpg'
             return JsonResponse({'success': True, 'message': 'Photo updated successfully.'})
         except UserProfile.DoesNotExist:
             return JsonResponse({'error': 'User profile not found.'}, status=404)
@@ -448,35 +602,35 @@ class UploadFaceImageView(View):
         return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class RegisterWithNationalIDView(View):
-    """Register a user with their national ID and face image"""
+# @method_decorator(csrf_exempt, name='dispatch')
+# class RegisterWithNationalIDView(View):
+#     """Register a user with their national ID and face image"""
 
-    def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return JsonResponse({'error': 'User not authenticated.'}, status=401)
+#     def post(self, request, *args, **kwargs):
+#         if not request.user.is_authenticated:
+#             return JsonResponse({'error': 'User not authenticated.'}, status=401)
 
-        data = json.loads(request.body)
-        national_id = data.get('national_id')
-        image_data = data.get('image')
-        if not national_id or not image_data:
-            return JsonResponse({'error': 'National ID and image required.'}, status=400)
+#         data = json.loads(request.body)
+#         national_id = data.get('national_id')
+#         image_data = data.get('image')
+#         if not national_id or not image_data:
+#             return JsonResponse({'error': 'National ID and image required.'}, status=400)
 
-        # Simulate Fayda API integration
-        if User.objects.filter(username=national_id).exists():
-            user = User.objects.get(username=national_id)
-        else:
-            user = User.objects.create_user(username=national_id, password=User.objects.make_random_password())
+#         # Simulate Fayda API integration
+#         if User.objects.filter(username=national_id).exists():
+#             user = User.objects.get(username=national_id)
+#         else:
+#             user = User.objects.create_user(username=national_id, password=User.objects.make_random_password())
 
-        face_encoding = encode_face_from_base64(image_data)
-        if face_encoding is None:
-            return JsonResponse({'error': 'No face detected.'}, status=400)
+#         face_encoding = encode_face_from_base64(image_data)
+#         if face_encoding is None:
+#             return JsonResponse({'error': 'No face detected.'}, status=400)
 
-        profile, created = UserProfile.objects.get_or_create(user=user)
-        profile.face_encoding = face_encoding
-        profile.save()
+#         profile, created = UserProfile.objects.get_or_create(user=user)
+#         profile.face_encoding = face_encoding
+#         profile.save()
 
-        return JsonResponse({'success': True, 'national_id': national_id})
+#         return JsonResponse({'success': True, 'national_id': national_id})
     
 
 @method_decorator(csrf_exempt, name='dispatch')

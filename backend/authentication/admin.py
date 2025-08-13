@@ -7,7 +7,7 @@ admin.site.index_title = 'Welcome to the Anti-Cheating Admin Portal'
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'full_name', 'national_id', 'age', 'education_level', 'rf_identifier', 'blocked', 'national_id_photo')
+    list_display = ('user', 'full_name', 'national_id', 'age', 'education_level', 'rf_identifier', 'blocked', 'national_id_photo','extracted_face_photo', 'face_encoding', 'iris_encoding', 'fingerprint_encoding')
     search_fields = ('user__username', 'full_name', 'national_id', 'rf_identifier')
     list_filter = ('education_level', 'blocked')
     readonly_fields = ()
