@@ -8,6 +8,7 @@ import ExamInterface from "./components/sections/ExamInterface";
 import { NotFound } from "./components/sections/notFound";
 function App() {
   return (
+    //checking..
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HeroSection />} />
