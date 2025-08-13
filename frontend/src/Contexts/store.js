@@ -6,7 +6,7 @@ export const store = configureStore({
   reducer: {
     user: userReducer,
     [authApi.reducerPath]: authApi.reducer, // registering the authApi reducer
-    // [examMonitorApi.reducerPath]: examMonitorApi.reducer, // if needed
+    // [examMonitorApi.reducerPath]: examMonitorApi.reducer, // if needed,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(

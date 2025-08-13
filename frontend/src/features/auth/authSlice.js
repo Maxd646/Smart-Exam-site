@@ -4,6 +4,8 @@ import { createSlice } from "@reduxjs/toolkit";
     username: "",
     nationalId: "",
     biometricPhoto: null,
+    isVerifiedWithCredentials: false,
+    isVerifiedWithBiometrics: false,
     //add the others here
 }
 
@@ -15,7 +17,8 @@ const userSlice = createSlice({
             state.username = action.payload.username;
             state.nationalId = action.payload?.nationalId;
             state.biometricPhoto = action.payload?.biometricPhoto;
-            //add the others here
+            state.isVerifiedWithCredentials = action.payload?.isVerifiedWithCredentials || false;
+            state.isVerifiedWithBiometrics = action.payload?.isVerifiedWithBiometrics || false;
         },
         logOut: (state) => {
             state.username = "";

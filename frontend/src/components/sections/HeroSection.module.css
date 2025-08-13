@@ -1,174 +1,410 @@
 .container {
-        min-height: 100vh;
-        width: 100%;
-        margin:0;
-        overflow: hidden;
-        position: relative;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        font-family: Arial, sans-serif;
-        color: white;
-        text-align: center;
-        padding: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #ecfdf5 100%);
 }
-.glassCard{
-          position: relative;
-          z-index: 2;
-          background: rgba(255,255,255,0.10);
-          box-shadow: 0 8px 32px 0 rgba(31,38,135,0.37);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-          border-radius: 32px;
-          padding: 48px 36px 36px 36px;
-          max-width: 540px;
-          width: 100%;
-          margin: auto;
-          border: 1.5px solid rgba(255,255,255,0.18);
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .header {
+    padding: 1rem 2rem;
+  }
 }
 
 .logo {
-  font-size: 72px;
-  margin-bottom: 20px;
-  animation: logoPop 1.2s cubic-bezier(.68,-0.55,.27,1.55);
-}
-.title{
-        font-size: 48px;
-        font-weight: bold;
-        margin-bottom: 16px;
-        text-shadow: 2px 2px 8px rgba(0,0,0,0.18);
-        animation: fadeInUp 1s ease-out 0.2s both;
-}
-
-.subtitle{
-           font-size: 20px;
-            margin-bottom: 32px;
-            opacity: 0.92;
-            max-width: 600px;
-            line-height: 1.6;
-            animation: fadeInUp 1s ease-out 0.4s both;
-}
-
-.features{
   display: flex;
-            gap: 30px;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-            justify-content: center;
-            animation: fadeInUp 1s ease-out 0.6s both;
-}
-.feature{
-   text-align: center;
-              transition: transform 0.2s;
-              animation: featurePop 1.2s 0.2s both;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.featuress{
-                text-align: center;
-              transition: transform 0.2s;
-              animation: featurePop 1.2s 0.4s both;
-}
-.featuresss{
-                text-align: center;
-              transition: transform 0.2s;
-              animation: featurePop 1.2s 0.6s both;
-}
-.icon{
-  font-size: 32px;
-  margin-bottom: 8px;
-}
-.startButton{
-      padding: 18px 54px;
-    font-size: 22px;
-    font-weight: bold;
-    border-radius: 50px;
-    border: none;
-    background: linear-gradient(90deg, #ff6b6b 0%, #ee5a24 100%);
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    transition: all 0.3s cubic-bezier(.68,-0.55,.27,1.55);
-    animation: pulse 1.5s infinite;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 0 auto;
+.logoIcon {
+  height: 2rem;
+  width: 2rem;
+  color: #059669;
 }
 
-  .bubblesBg {
-          position: absolute;
-          top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0;
-          overflow: hidden;
-        }
-   .bubble {
-          position: absolute;
-          border-radius: 50%;
-          opacity: 0.18;
-          background: linear-gradient(135deg, #fff 0%, #667eea 100%);
-          animation: bubbleFloat 12s infinite ease-in-out;
-        }
-     .bubble1 { width: 120px; height: 120px; left: 8vw; top: 10vh; animation-delay: 0s; }
-        .bubble2 { width: 80px; height: 80px; left: 70vw; top: 18vh; animation-delay: 2s; }
-        .bubble3 { width: 100px; height: 100px; left: 50vw; top: 70vh; animation-delay: 4s; }
-        .bubble4 { width: 60px; height: 60px; left: 20vw; top: 80vh; animation-delay: 1s; }
-        .bubble5 { width: 90px; height: 90px; left: 80vw; top: 60vh; animation-delay: 3s; }
-        .bubble6 { width: 70px; height: 70px; left: 40vw; top: 30vh; animation-delay: 5s; }
-        .bubble7 { width: 110px; height: 110px; left: 60vw; top: 50vh; animation-delay: 6s; }
-        .bubble8 { width: 50px; height: 50px; left: 30vw; top: 60vh; animation-delay: 7s; }
-        .bubble9 { width: 100px; height: 100px; left: 75vw; top: 80vh; animation-delay: 8s; }
-        .bubble10 { width: 60px; height: 60px; left: 15vw; top: 40vh; animation-delay: 9s; }
-        .bubble11 { width: 80px; height: 80px; left: 55vw; top: 15vh; animation-delay: 10s; }
-        .bubble12 { width: 90px; height: 90px; left: 85vw; top: 35vh; animation-delay: 11s; }
-        @keyframes bubbleFloat {
-          0% { transform: translateY(0) scale(1); opacity: 0.18; }
-          50% { transform: translateY(-40px) scale(1.08); opacity: 0.28; }
-          100% { transform: translateY(0) scale(1); opacity: 0.18; }
-        }
+.logoText {
+  font-family: serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #0f172a;
+}
 
-  .footer{
-          position: relative;
-            margin-top: 40px;
-            font-size: 13px;
-            opacity: 0.8;
-            animation: fadeIn 1s ease-out 1s both;
+.badge {
+  background-color: #d1fae5;
+  color: #047857;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.main {
+  padding: 2rem 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .main {
+    padding: 2rem 2rem;
   }
+}
 
+.maxWidth {
+  max-width: 72rem;
+  margin: 0 auto;
+}
 
+.grid {
+  display: grid;
+  gap: 3rem;
+  align-items: center;
+}
 
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
 
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
 
+.titleSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 
+.title {
+  font-family: serif;
+  font-weight: 700;
+  font-size: 2.25rem;
+  color: #0f172a;
+  line-height: 1.1;
+}
 
+@media (min-width: 1024px) {
+  .title {
+    font-size: 3rem;
+  }
+}
 
+.titleHighlight {
+  color: #059669;
+}
 
+.subtitle {
+  font-size: 1.25rem;
+  color: #475569;
+  line-height: 1.6;
+}
 
- @keyframes fadeInDown {
-          from { opacity: 0; transform: translateY(-30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes logoPop {
-          0% { transform: scale(0.7) rotate(-10deg); opacity: 0; }
-          60% { transform: scale(1.15) rotate(8deg); opacity: 1; }
-          100% { transform: scale(1) rotate(0); }
-        }
-        @keyframes featurePop {
-          0% { transform: scale(0.7) translateY(30px); opacity: 0; }
-          60% { transform: scale(1.1) translateY(-8px); opacity: 1; }
-          100% { transform: scale(1) translateY(0); }
-        }
-        @keyframes pulse {
-          0% { box-shadow: 0 0 0 0 rgba(255,107,107,0.4); }
-          70% { box-shadow: 0 0 0 12px rgba(255,107,107,0.0); }
-          100% { box-shadow: 0 0 0 0 rgba(255,107,107,0.0); }
-        }
+.stepsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stepsTitle {
+  font-family: serif;
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: #0f172a;
+}
+
+.stepsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.stepNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background-color: #d1fae5;
+  color: #059669;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.stepContent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.stepIcon {
+  height: 1.25rem;
+  width: 1.25rem;
+  color: #64748b;
+}
+
+.stepTitle {
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.stepDescription {
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.buttonSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.startButton {
+  width: 100%;
+  background-color: #059669;
+  color: white;
+  padding: 1rem;
+  font-size: 1.125rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.startButton:hover {
+  background-color: #047857;
+}
+
+.buttonNote {
+  font-size: 0.875rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.privacyNote {
+  background-color: #dbeafe;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.privacyContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.privacyIcon {
+  height: 1.25rem;
+  width: 1.25rem;
+  color: #2563eb;
+  margin-top: 0.125rem;
+}
+
+.privacyTitle {
+  font-weight: 500;
+  color: #1e3a8a;
+  font-size: 0.875rem;
+}
+
+.privacyText {
+  font-size: 0.875rem;
+  color: #1d4ed8;
+  margin-top: 0.25rem;
+}
+
+.rightColumn {
+  position: relative;
+}
+
+.previewCard {
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.previewContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.previewHeader {
+  text-align: center;
+}
+
+.previewTitle {
+  font-family: serif;
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.previewSubtitle {
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.mockInterface {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mockStep {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid;
+}
+
+.mockStepVerified {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.mockStepActive {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.mockStepPending {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.mockStepContent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mockStepIcon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mockStepIconVerified {
+  background-color: #22c55e;
+}
+
+.mockStepIconActive {
+  background-color: #3b82f6;
+}
+
+.mockStepIconPending {
+  background-color: #94a3b8;
+}
+
+.mockStepIconSvg {
+  height: 1rem;
+  width: 1rem;
+  color: white;
+}
+
+.mockStepTitle {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.mockStepTitleVerified {
+  color: #166534;
+}
+
+.mockStepTitleActive {
+  color: #1e40af;
+}
+
+.mockStepTitlePending {
+  color: #374151;
+}
+
+.mockStepDesc {
+  font-size: 0.75rem;
+}
+
+.mockStepDescVerified {
+  color: #15803d;
+}
+
+.mockStepDescActive {
+  color: #2563eb;
+}
+
+.mockStepDescPending {
+  color: #64748b;
+}
+
+.securityBadge {
+  text-align: center;
+  padding-top: 1rem;
+}
+
+.securityBadgeContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #059669;
+  font-weight: 500;
+}
+
+.securityBadgeIcon {
+  height: 1rem;
+  width: 1rem;
+}
+
+.floatingBadge {
+  position: absolute;
+  top: -0.75rem;
+  right: -0.75rem;
+  background-color: #059669;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 50%;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.floatingBadgeIcon {
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+.backgroundAccent {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, #d1fae5 0%, transparent 100%);
+  border-radius: 1rem;
+  transform: rotate(2deg);
+}

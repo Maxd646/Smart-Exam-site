@@ -1,15 +1,35 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 export default function ExamInterface() {
   const [warning, setWarning] = useState("");
   const warningTimeout = useRef(null);
   const socketRef = useRef(null);
   const [submitted, setSubmitted] = useState(false);
+  const {isVerifiedWithCredentials,isVerifiedWithBiometrics} = useSelector((state) => state.user);
+  const navigate = useNavigate();
 
   const user = {
     username: "Alehegne",
     biometric: "Face",
   };
+  console.log("cre",isVerifiedWithCredentials);
+  console.log("bio",isVerifiedWithBiometrics);
+
+
+
+  useEffect(()=>{
+  //redirect to the login if not isVerifiedWithCredentials
+  if(!isVerifiedWithCredentials){
+    navigate("/login");
+  }
+    //redirect to the login with credentials if not isVerifiedWithBiometrics
+  if(!isVerifiedWithBiometrics){
+    navigate("/login/biometric");
+  }
+  },[isVerifiedWithBiometrics,isVerifiedWithCredentials])
+
 
   useEffect(() => {
     // socketRef.current = connectAlertSocket(user.username);
