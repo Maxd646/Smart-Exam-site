@@ -349,158 +349,158 @@ class UpdatePhotoView(View):
 
         
         
-@method_decorator(csrf_exempt, name='dispatch')
-class UploadFaceImageView(View):
-    """Upload a face image for verification"""
+# @method_decorator(csrf_exempt, name='dispatch')
+# class UploadFaceImageView(View):
+#     """Upload a face image for verification"""
 
-    def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return JsonResponse({'error': 'User not authenticated.'}, status=401)
+#     def post(self, request, *args, **kwargs):
+#         if not request.user.is_authenticated:
+#             return JsonResponse({'error': 'User not authenticated.'}, status=401)
 
-        data = json.loads(request.body)
-        image_data = data.get('image')
-        if not image_data:
-            return JsonResponse({'error': 'Image data missing.'}, status=400)
-        image_bytes = base64.b64decode(image_data.split(',')[-1])
-        np_array = np.frombuffer(image_bytes, dtype=np.uint8)
-        image = face_recognition.load_image_file(np_array)
-        try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            known_encoding = np.frombuffer(user_profile.face_encoding)
+#         data = json.loads(request.body)
+#         image_data = data.get('image')
+#         if not image_data:
+#             return JsonResponse({'error': 'Image data missing.'}, status=400)
+#         image_bytes = base64.b64decode(image_data.split(',')[-1])
+#         np_array = np.frombuffer(image_bytes, dtype=np.uint8)
+#         image = face_recognition.load_image_file(np_array)
+#         try:
+#             user_profile = UserProfile.objects.get(user=request.user)
+#             known_encoding = np.frombuffer(user_profile.face_encoding)
 
-            face_encodings = face_recognition.face_encodings(image)
-            if not face_encodings:
-                return JsonResponse({'error': 'No face detected.'}, status=400)
+#             face_encodings = face_recognition.face_encodings(image)
+#             if not face_encodings:
+#                 return JsonResponse({'error': 'No face detected.'}, status=400)
 
-            result = face_recognition.compare_faces([known_encoding], face_encodings[0])
-            if result[0]:
-                return JsonResponse({'verified': True})
-            else:
-                return JsonResponse({'verified': False})
-        except UserProfile.DoesNotExist:
-            return JsonResponse({'error': 'User profile not found.'}, status=404)
-        return JsonResponse({'error': 'Invalid request method.'}, status=405)
+#             result = face_recognition.compare_faces([known_encoding], face_encodings[0])
+#             if result[0]:
+#                 return JsonResponse({'verified': True})
+#             else:
+#                 return JsonResponse({'verified': False})
+#         except UserProfile.DoesNotExist:
+#             return JsonResponse({'error': 'User profile not found.'}, status=404)
+#         return JsonResponse({'error': 'Invalid request method.'}, status=405)
     
 
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class FaydaCallbackView(View):
-    """Handle Fayda OIDC callback after successful authentication"""
+# @method_decorator(csrf_exempt, name='dispatch')
+# class FaydaCallbackView(View):
+#     """Handle Fayda OIDC callback after successful authentication"""
 
-    def get(self, request, *args, **kwargs):
-        code = request.GET.get('code')
-        state = request.GET.get('state')
-        if not code or not state:
-            return JsonResponse({'error': 'Missing required parameters'}, status=400)
+#     def get(self, request, *args, **kwargs):
+#         code = request.GET.get('code')
+#         state = request.GET.get('state')
+#         if not code or not state:
+#             return JsonResponse({'error': 'Missing required parameters'}, status=400)
 
-        try:
-            # Parse the state parameter to get user data
-            import json
-            user_data = json.loads(state)
+#         try:
+#             # Parse the state parameter to get user data
+#             import json
+#             user_data = json.loads(state)
 
-            # In a real implementation, you would:
-            # 1. Exchange the authorization code for tokens with Fayda
-            # 2. Verify the tokens
-            # 3. Get user information from Fayda
-            # 4. Update the user's profile with Fayda data
+#             # In a real implementation, you would:
+#             # 1. Exchange the authorization code for tokens with Fayda
+#             # 2. Verify the tokens
+#             # 3. Get user information from Fayda
+#             # 4. Update the user's profile with Fayda data
 
-            # For now, we'll simulate successful verification
-            return JsonResponse({
-                'verified': True,
-                'username': user_data.get('username'),
-                'fayda_verified': True,
-                'message': 'Successfully verified with Fayda'
-            })
+#             # For now, we'll simulate successful verification
+#             return JsonResponse({
+#                 'verified': True,
+#                 'username': user_data.get('username'),
+#                 'fayda_verified': True,
+#                 'message': 'Successfully verified with Fayda'
+#             })
 
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid state parameter'}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': f'Verification failed: {str(e)}'}, status=500)
+#         except json.JSONDecodeError:
+#             return JsonResponse({'error': 'Invalid state parameter'}, status=400)
+#         except Exception as e:
+#             return JsonResponse({'error': f'Verification failed: {str(e)}'}, status=500)
         
-@method_decorator(csrf_exempt, name='dispatch')
-class FaydaOIDCLoginView(View):
-    """Redirect user to Fayda OIDC authorization endpoint"""
+# @method_decorator(csrf_exempt, name='dispatch')
+# class FaydaOIDCLoginView(View):
+#     """Redirect user to Fayda OIDC authorization endpoint"""
 
-    def get(self, request, *args, **kwargs):
-        client_id = os.environ.get('FAYDA_CLIENT_ID', settings.FAYDA_CLIENT_ID)
-        redirect_uri = os.environ.get('FAYDA_REDIRECT_URI', settings.FAYDA_REDIRECT_URI)
-        authorization_endpoint = os.environ.get('FAYDA_AUTHORIZATION_ENDPOINT', settings.FAYDA_AUTHORIZATION_ENDPOINT)
-        state = 'fayda_' + os.urandom(8).hex()
-        params = {
-            'client_id': client_id,
-            'redirect_uri': redirect_uri,
-            'response_type': 'code',
-            'scope': 'openid profile',
-            'state': state,
-        }
-        url = f"{authorization_endpoint}?{urlencode(params)}"
-        return redirect(url)
+#     def get(self, request, *args, **kwargs):
+#         client_id = os.environ.get('FAYDA_CLIENT_ID', settings.FAYDA_CLIENT_ID)
+#         redirect_uri = os.environ.get('FAYDA_REDIRECT_URI', settings.FAYDA_REDIRECT_URI)
+#         authorization_endpoint = os.environ.get('FAYDA_AUTHORIZATION_ENDPOINT', settings.FAYDA_AUTHORIZATION_ENDPOINT)
+#         state = 'fayda_' + os.urandom(8).hex()
+#         params = {
+#             'client_id': client_id,
+#             'redirect_uri': redirect_uri,
+#             'response_type': 'code',
+#             'scope': 'openid profile',
+#             'state': state,
+#         }
+#         url = f"{authorization_endpoint}?{urlencode(params)}"
+#         return redirect(url)
     
 
-@method_decorator(csrf_exempt, name='dispatch')
-class FaydaOIDCCallbackView(View):
-    """Handle Fayda OIDC callback, exchange code for token, fetch user info"""
+# @method_decorator(csrf_exempt, name='dispatch')
+# class FaydaOIDCCallbackView(View):
+#     """Handle Fayda OIDC callback, exchange code for token, fetch user info"""
 
-    def get(self, request, *args, **kwargs):
-        code = request.GET.get('code')
-        state = request.GET.get('state')
-        if not code:
-            return JsonResponse({'error': 'Missing code from Fayda.'}, status=400)
-        # Exchange code for token
-        token_endpoint = os.environ.get('FAYDA_TOKEN_ENDPOINT', settings.FAYDA_TOKEN_ENDPOINT)
-        client_id = os.environ.get('FAYDA_CLIENT_ID', settings.FAYDA_CLIENT_ID)
-        redirect_uri = os.environ.get('FAYDA_REDIRECT_URI', settings.FAYDA_REDIRECT_URI)
-        data = {
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': redirect_uri,
-            'client_id': client_id,
-        }
-        token_resp = requests.post(token_endpoint, data=data)
-        if token_resp.status_code != 200:
-            return JsonResponse({'error': 'Failed to get token from Fayda.'}, status=401)
-        tokens = token_resp.json()
-        access_token = tokens.get('access_token')
-        if not access_token:
-            return JsonResponse({'error': 'No access token from Fayda.'}, status=401)
-        # Fetch user info
-        userinfo_endpoint = os.environ.get('FAYDA_USERINFO_ENDPOINT', settings.FAYDA_USERINFO_ENDPOINT)
-        headers = {'Authorization': f'Bearer {access_token}'}
-        userinfo_resp = requests.get(userinfo_endpoint, headers=headers)
-        if userinfo_resp.status_code != 200:
-            return JsonResponse({'error': 'Failed to fetch user info from Fayda.'}, status=401)
-        userinfo = userinfo_resp.json()
-        # You can extract user info as needed, e.g. sub, name, etc.
-        # For demo, just return userinfo and require biometric next
-        return JsonResponse({
-            'step': 'fayda_authenticated',
-            'userinfo': userinfo,
-            'message': 'Fayda OIDC authentication successful. Please provide biometric data.'
-        })
+#     def get(self, request, *args, **kwargs):
+#         code = request.GET.get('code')
+#         state = request.GET.get('state')
+#         if not code:
+#             return JsonResponse({'error': 'Missing code from Fayda.'}, status=400)
+#         # Exchange code for token
+#         token_endpoint = os.environ.get('FAYDA_TOKEN_ENDPOINT', settings.FAYDA_TOKEN_ENDPOINT)
+#         client_id = os.environ.get('FAYDA_CLIENT_ID', settings.FAYDA_CLIENT_ID)
+#         redirect_uri = os.environ.get('FAYDA_REDIRECT_URI', settings.FAYDA_REDIRECT_URI)
+#         data = {
+#             'grant_type': 'authorization_code',
+#             'code': code,
+#             'redirect_uri': redirect_uri,
+#             'client_id': client_id,
+#         }
+#         token_resp = requests.post(token_endpoint, data=data)
+#         if token_resp.status_code != 200:
+#             return JsonResponse({'error': 'Failed to get token from Fayda.'}, status=401)
+#         tokens = token_resp.json()
+#         access_token = tokens.get('access_token')
+#         if not access_token:
+#             return JsonResponse({'error': 'No access token from Fayda.'}, status=401)
+#         # Fetch user info
+#         userinfo_endpoint = os.environ.get('FAYDA_USERINFO_ENDPOINT', settings.FAYDA_USERINFO_ENDPOINT)
+#         headers = {'Authorization': f'Bearer {access_token}'}
+#         userinfo_resp = requests.get(userinfo_endpoint, headers=headers)
+#         if userinfo_resp.status_code != 200:
+#             return JsonResponse({'error': 'Failed to fetch user info from Fayda.'}, status=401)
+#         userinfo = userinfo_resp.json()
+#         # You can extract user info as needed, e.g. sub, name, etc.
+#         # For demo, just return userinfo and require biometric next
+#         return JsonResponse({
+#             'step': 'fayda_authenticated',
+#             'userinfo': userinfo,
+#             'message': 'Fayda OIDC authentication successful. Please provide biometric data.'
+#         })
     
-@method_decorator(csrf_exempt, name='dispatch')
-class Verifayda_loginView(View):
-    """Redirect user to VeriFayda OIDC authorization endpoint"""
+# @method_decorator(csrf_exempt, name='dispatch')
+# class Verifayda_loginView(View):
+#     """Redirect user to VeriFayda OIDC authorization endpoint"""
 
-    def get(self, request, *args, **kwargs):
-        client_id = os.environ.get('VERIFAYDA_CLIENT_ID', settings.VERIFAYDA_CLIENT_ID)
-        redirect_uri = os.environ.get('VERIFAYDA_REDIRECT_URI', settings.VERIFAYDA_REDIRECT_URI)
-        authorization_endpoint = os.environ.get('VERIFAYDA_AUTHORIZATION_ENDPOINT', settings.VERIFAYDA_AUTHORIZATION_ENDPOINT)
-        state = 'verifayda_' + os.urandom(8).hex()
-        params = {
-            'client_id': client_id,
-            'redirect_uri': redirect_uri,
-            'response_type': 'code',
-            'scope': 'openid profile',
-            'state': state,
-        }
-        url = f"{authorization_endpoint}?{urlencode(params)}"
-        return redirect(url)
+#     def get(self, request, *args, **kwargs):
+#         client_id = os.environ.get('VERIFAYDA_CLIENT_ID', settings.VERIFAYDA_CLIENT_ID)
+#         redirect_uri = os.environ.get('VERIFAYDA_REDIRECT_URI', settings.VERIFAYDA_REDIRECT_URI)
+#         authorization_endpoint = os.environ.get('VERIFAYDA_AUTHORIZATION_ENDPOINT', settings.VERIFAYDA_AUTHORIZATION_ENDPOINT)
+#         state = 'verifayda_' + os.urandom(8).hex()
+#         params = {
+#             'client_id': client_id,
+#             'redirect_uri': redirect_uri,
+#             'response_type': 'code',
+#             'scope': 'openid profile',
+#             'state': state,
+#         }
+#         url = f"{authorization_endpoint}?{urlencode(params)}"
+#         return redirect(url)
     
 
-def get_env(key, default=None):
-    return os.environ.get(key, getattr(settings, key, default))
+# def get_env(key, default=None):
+#     return os.environ.get(key, getattr(settings, key, default))
 
     
 

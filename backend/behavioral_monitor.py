@@ -1,16 +1,13 @@
-import cv2
+import cv2, os, json, requests
 import mediapipe as mp
 import numpy as np
 from datetime import datetime
-import os
-import requests
-import json
 from ultralytics import YOLO
 
 # --- Config ---
 LOG_FILE = "suspicious_log.txt"
 BACKEND_URL = "http://localhost:8000/authentication/alerts/"
-DEVICE_CLASSES = ['cell phone', 'laptop', 'tablet', 'tv', 'remote']  # YOLOv8 class names for devices
+DEVICE_CLASSES = ['cell phone', 'laptop', 'tablet', 'tv', 'remote']  
 
 # --- MediaPipe Setup ---
 mp_pose = mp.solutions.pose
@@ -20,8 +17,8 @@ pose = mp_pose.Pose()
 hands = mp_hands.Hands()
 face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False)
 
-# --- YOLOv8 Setup ---
-yolo_model = YOLO('yolov8n.pt')  # Use nano model for speed; download if needed
+
+yolo_model = YOLO('yolov8n.pt')  
 
 # --- Video Capture ---
 cap = cv2.VideoCapture(0)
