@@ -48,8 +48,9 @@ export const authApi = createApi({
         //handle error response
         console.error("Biometric login error:", error);
         return {
-          message: error.data.message,
-          status: error.status,
+          message: error.data?.message,
+          status: error?.status,
+          error:error
         };
       },
       async onQueryStarted() {}, //optional, can be used for optimistic updates

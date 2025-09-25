@@ -17,14 +17,8 @@ class UserProfileAdmin(admin.ModelAdmin):
         }),
     )
 
-@admin.register(ExamSession)
-class ExamSessionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'start_time', 'end_time', 'is_flagged')
-    search_fields = ('user__username',)
-    list_filter = ('is_flagged',)
-
 @admin.register(Alert)
 class AlertAdmin(admin.ModelAdmin):
-    list_display = ('username', 'alert_type', 'timestamp', 'device_mac', 'ip_address')
-    search_fields = ('username', 'alert_type', 'device_mac', 'ip_address')
-    list_filter = ('alert_type', 'timestamp')
+    list_display = ('username', 'timestamp', 'device_mac')
+    search_fields = ('username',  'device_mac')
+    list_filter = ('timestamp','username')

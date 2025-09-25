@@ -289,7 +289,6 @@ class BlockUserView(View):
     
 
 @method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(login_required, name='dispatch')
 class StartBehavioralMonitoringView(View):
     """Start behavioral monitoring for a user after successful login"""
 
@@ -315,6 +314,7 @@ class StartBehavioralMonitoringView(View):
             return JsonResponse({'error': f'Failed to start monitoring: {str(e)}'}, status=500)
 
     def get(self, request, *args, **kwargs):
+        
         return JsonResponse({'error': 'Invalid request method'}, status=405)
     
 def get_env(key, default=None):
