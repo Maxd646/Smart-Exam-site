@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 class Register(models.Model):
     user=models.OneToOneField(User, on_delete=models.CASCADE)
     rf_identifier = models.CharField(max_length=255, null=True, blank=True)  
-    blocked = models.BooleanField(default=False)
     national_id = models.CharField(max_length=32, null=True, blank=True)
     full_name = models.CharField(max_length=150, null=True, blank=True)
     age = models.IntegerField(null=True, blank=True)

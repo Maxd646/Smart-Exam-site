@@ -8,7 +8,6 @@
 
 ### 🎯 What's New:
 
-- ✅ **Fayda Integration Complete** - Post-login redirect to Fayda for additional verification
 - ✅ **Advanced UI/UX** - Professional landing page and modern exam interface
 - ✅ **Multi-Biometric Support** - Face, Iris, and Fingerprint recognition
 - ✅ **AI Behavioral Monitoring** - Real-time cheating detection via webcam
@@ -28,7 +27,6 @@ Online exams face major challenges:
 1. **Identity Fraud** – Anyone could impersonate a student during online exams.
 2. **Cheating Detection** – Participants can use external devices like phones, Bluetooth earbuds, or other wireless tools to cheat during exams.
 3. **Lack and unclear orientation- loss of confidence** -Has the centeralzed orientaion for all the country even the world and can be notice if there is fualt for all the student if there is a doubtfull things happen
-4.
 
 There is no affordable and intelligent system in Ethiopia that combines identity verification and real-time cheating prevention in remote assessments.
 
@@ -39,12 +37,12 @@ There is no affordable and intelligent system in Ethiopia that combines identity
 **SmartGuard Exam Proctor** — an advanced online examination monitoring system that solves these challenges using:
 
 - **Multi-Biometric Authentication** – Face, Iris, and Fingerprint recognition for secure login
-- **Fayda Integration** – Post-login redirect to Fayda for additional national ID verification
 - **AI Behavioral Monitoring** – Real-time webcam monitoring for suspicious activities
 - **Device Detection** – Background scanning for unauthorized wireless devices
 - **Real-Time Alerts** – Comprehensive dashboard for supervisors with detailed device and location info
 - **Secure Exam Environment** – Prevents tab switching, copy/paste, and unauthorized access
-- **Chat assistance and live video stream** - Give centralzed orientation,
+- **Chat assistance and live video stream** - Give centralzed orientation for the exam takers,
+- **Fayda Integration** – Post-login redirect to Fayda for additional national ID verification
 
 ---
 
@@ -52,20 +50,20 @@ There is no affordable and intelligent system in Ethiopia that combines identity
 
 - ✅ **Professional Landing Page** - Beautiful, modern UI with smooth animations
 - ✅ **Two-Step Authentication** - Credentials + Biometric verification
-- ✅ **Fayda Integration** - Seamless redirect to national ID system after login
+<!-- - ✅ **Fayda Integration** - Seamless redirect to national ID system after login -->
 - ✅ **Advanced Exam Interface** - Professional exam environment with real-time monitoring
 - ✅ **AI-Powered Monitoring** - Behavioral detection using MediaPipe and OpenCV
 - ✅ **Comprehensive Dashboard** - Real-time alerts with device and location tracking
 - ***
 
-### 🇪🇹 Fayda Integration (Updated):
+<!-- ### 🇪🇹 Fayda Integration (Updated):
 
 Fayda integration now works as follows:
 
 1. **User Login** - Username/password + biometric verification
 2. **Fayda Redirect** - Automatic redirect to Fayda for additional verification
 3. **Callback Handling** - System processes Fayda verification response
-4. **Exam Access** - User proceeds to secure exam environment
+4. **Exam Access** - User proceeds to secure exam environment -->
 
 This ensures:
 
@@ -120,8 +118,10 @@ This ensures:
 ### 2. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
-cd <your-repo-directory>
+git clone https://github.com/Maxd646/Smart-Exam-site
+cd backend
+cd frontend
+cd register_service
 ```
 
 ### 3. Install Dependencies
@@ -159,10 +159,10 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 # Database Settings
 DATABASE_URL=postgresql://newuser:QAZwsx123#@db:5432/my_db
 
-# Fayda Integration
-FAYDA_CLIENT_ID=exam_system
-FAYDA_CLIENT_SECRET=your-fayda-secret
-FAYDA_REDIRECT_URI=http://localhost:8000/authentication/fayda-callback/
+# # Fayda Integration
+# FAYDA_CLIENT_ID=exam_system
+# FAYDA_CLIENT_SECRET=your-fayda-secret
+# FAYDA_REDIRECT_URI=http://localhost:8000/authentication/fayda-callback/
 
 # Security Settings
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
@@ -340,4 +340,3 @@ This tests:
 ## Contributors:
 
 - Daniel Kebede(https://github.com/Maxd646)
-- Alehegne Geta(https://github.com/Alehegne)

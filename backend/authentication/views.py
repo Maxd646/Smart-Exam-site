@@ -3,14 +3,12 @@ from django.contrib.auth import authenticate
 from django.utils.decorators import method_decorator
 import numpy as np
 from django.conf import settings
-from .face_recognition import compare_faces
 import face_recognition
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import UserProfile, ExamSession, Alert
-# from .face_recognition import encode_face_from_base64
 from django.views.decorators.http import require_GET
 import os, json, requests, base64, io
 from django.shortcuts import redirect
