@@ -1,4 +1,4 @@
-from django.views import View
+from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from django.utils.decorators import method_decorator
 import numpy as np
@@ -6,9 +6,10 @@ from django.conf import settings
 import face_recognition
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from rest_framework.response import Response
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import UserProfile, ExamSession, Alert
+from .models import UserProfile, ExamSession, Alert, Examorientetion
 from django.views.decorators.http import require_GET
 import os, json, requests, base64, io
 from django.shortcuts import redirect
@@ -16,43 +17,56 @@ from urllib.parse import urlencode
 from django.core.files.storage import default_storage
 from io import BytesIO
 from PIL import Image
+from.serializers import ExamorientetionSerializer
 
 
 def compare_faces(known_image_path, unknown_base64_image):
-    """
-    Compare a stored image file (known_image_path) with a live captured base64 image
-    Returns True if faces match, False otherwise.
-    """
     try:
-        # Load known image from file
+        import face_recognition
+        import numpy as np
+        from PIL import Image
+        from io import BytesIO
+        import os, base64
+
+        if not os.path.exists(known_image_path):
+            print("Known image path does not exist:", known_image_path)
+            return False
+
+        # Load known image
         known_image = face_recognition.load_image_file(known_image_path)
         known_encodings = face_recognition.face_encodings(known_image)
         if not known_encodings:
-            return False  
+            print("No face found in known image.")
+            return False
         known_encoding = known_encodings[0]
 
-        # Decode unknown base64 image
-        header, encoded = unknown_base64_image.split(",", 1)  
+        # Decode unknown image
+        if "," in unknown_base64_image:
+            header, encoded = unknown_base64_image.split(",", 1)
+        else:
+            encoded = unknown_base64_image
         decoded = base64.b64decode(encoded)
-        unknown_image = np.array(Image.open(BytesIO(decoded)))
 
-        # Get face encoding of unknown image
+        unknown_image = np.array(Image.open(BytesIO(decoded)))
         unknown_encodings = face_recognition.face_encodings(unknown_image)
         if not unknown_encodings:
-            return False  # No face detected in live image
+            print("No face found in biometric image.")
+            return False
         unknown_encoding = unknown_encodings[0]
 
         # Compare faces
         results = face_recognition.compare_faces([known_encoding], unknown_encoding)
         return results[0]
+
     except Exception as e:
         print("Face comparison error:", e)
         return False
 
 
+
 # --- Registration ---
 @method_decorator(csrf_exempt, name='dispatch')
-class RegisterWithNationalIDView(View):
+class RegisterWithNationalIDView(APIView):
     def post(self, request, *args, **kwargs):
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -66,10 +80,10 @@ class RegisterWithNationalIDView(View):
 
 
         if not all([username, password, full_name, national_id, photo,address, age, education_level, rf_identifier]):
-            return JsonResponse({"error": "All fields are required."}, status=400)
+            return Response({"error": "All fields are required."}, status=400)
 
         if User.objects.filter(username=username).exists():
-            return JsonResponse({"error": "Username already exists."}, status=400)
+            return Response({"error": "Username already exists."}, status=400)
 
         user = User.objects.create_user(username=username, password=password)
         profile = UserProfile.objects.create(
@@ -78,16 +92,16 @@ class RegisterWithNationalIDView(View):
             national_id=national_id,
             national_id_photo=photo
         )
-        return JsonResponse({"success": True, "message": "Student registered successfully."})
+        return Response({"success": True, "message": "Student registered successfully."})
 
 
 # --- show the registered national id---
 @method_decorator(csrf_exempt, name='dispatch')
-class NationalIDPhotoView(View):
+class NationalIDPhotoView(APIView):
     def get(self, request, *args, **kwargs):
         username = kwargs.get('username')
         if not username:
-            return JsonResponse({'error': 'Username required.'}, status=400)
+            return Response({'error': 'Username required.'}, status=400)
         try:
             user = User.objects.get(username=username)
             profile = UserProfile.objects.get(user=user)
@@ -96,39 +110,38 @@ class NationalIDPhotoView(View):
 
             if profile.national_id_photo:
                 photo_url = request.build_absolute_uri(profile.national_id_photo.url)
-            # if profile.extracted_face_photo:
-            #     face_url = request.build_absolute_uri(profile.extracted_face_photo.url)
-
-            return JsonResponse({
+            return Response({
                 'photo_url': photo_url,
                 'username': username,
                 'message': 'National ID photo and extracted face photo retrieved successfully.'
             })
         except (User.DoesNotExist, UserProfile.DoesNotExist):
-            return JsonResponse({'error': 'User not found.'}, status=404)
+            return Response({'error': 'User not found.'}, status=404)
         
+@method_decorator(csrf_exempt, name='dispatch' )
+class ListExamorientetionView(APIView):
+    def get(self, request, *args, **kwargs):
+        exam_orientetions = Examorientetion.objects.all()
+        serializer = ExamorientetionSerializer(exam_orientetions, many=True)
+        return Response(serializer.data, safe=False)
 
 # --- Verify credentials with traditional (login with username and password)---
 @method_decorator(csrf_exempt, name='dispatch')
-class VerifyCredentialsView(View):
+class VerifyCredentialsView(APIView):
     """Step 1: Verify username and password are registered"""
 
     def post(self, request, *args, **kwargs):
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON.'}, status=400)
-
+        data=request.data
         username = data.get('username')
         password = data.get('password')
 
         if not username or not password:
-            return JsonResponse({
+            return Response({
                 'error': 'Username and password required.'}, status=400)
 
         user = authenticate(username=username, password=password)
         if user is None:
-            return JsonResponse({
+            return Response({
                 'verified': False,
                 'error': 'Invalid username or password.',
                 'step': 'credentials_failed'
@@ -137,13 +150,13 @@ class VerifyCredentialsView(View):
         try:
             profile = UserProfile.objects.get(user=user)
             if profile.blocked:
-                return JsonResponse({
+                return Response({
                     'verified': False,
                     'error': 'User is blocked by supervisor.',
                     'step': 'blocked'
                 }, status=403)
 
-            return JsonResponse({
+            return Response({
                 'verified': True,
                 'username': username,
                 'step': 'credentials_verified',
@@ -152,88 +165,76 @@ class VerifyCredentialsView(View):
 
             })
         except UserProfile.DoesNotExist:
-            return JsonResponse({
+            return Response({
                 'verified': False,
                 'error': 'User profile not found. Please register biometric data.',
                 'step': 'no_profile'
             }, status=404)
 
     def get(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Invalid request method.'}, status=405)
+        return Response({'error': 'Invalid request method.'}, status=405)
     
 
-# --- Biometric login with live face ---
 @method_decorator(csrf_exempt, name='dispatch')
-class VerifyBiometricView(View):
+class VerifyBiometricView(APIView):
     def post(self, request):
-        """
-        Expects JSON:
-        {
-            "username": "...",
-            "biometric_data": "data:image/jpeg;base64,...."
-        }
-        """
         try:
-            data = json.loads(request.body)
+            data = request.data
             username = data.get("username")
             biometric_data = data.get("biometric_data")
 
             if not username or not biometric_data:
-                return JsonResponse({"error": "Username and biometric data are required."}, status=400)
+                return Response({"error": "Username and biometric data are required."}, status=400)
 
             try:
                 profile = UserProfile.objects.get(user__username=username)
             except UserProfile.DoesNotExist:
-                return JsonResponse({"error": "User not found"}, status=404)
-            
-            image_path=profile.national_id_photo.path
-            biometric_base64 =data.get("biometric_data")
+                return Response({"error": "User not found"}, status=404)
 
-            match=compare_faces(image_path, biometric_base64)
+            image_path = profile.national_id_photo.path
+            match = compare_faces(image_path, biometric_data)
+
             if match:
-                return JsonResponse({"success": True, "message": "Biometric verification passed"})
+                return Response({"success": True, "message": "Biometric verification passed"})
             else:
-                return JsonResponse({"success": False, "message": "Biometric verification failed"})
+                return Response({"success": False, "message": "Biometric verification failed"})
 
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON format"}, status=400)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    def get(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Invalid request method.'}, status=405)
+            print("VerifyBiometricView error:", e)
+            return Response({"error": str(e)}, status=500)
+
 
 @method_decorator(csrf_exempt, name='dispatch')    
-class logoutView(View):
+class logoutView(APIView):
     """Logout the user"""
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return JsonResponse({'error': 'User not authenticated.'}, status=401)
+            return Response({'error': 'User not authenticated.'}, status=401)
         from django.contrib.auth import logout
         logout(request)
-        return JsonResponse({'message': 'User logged out successfully.'})
+        return Response({'message': 'User logged out successfully.'})
 
     def get(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Invalid request method.'}, status=405)
+        return Response({'error': 'Invalid request method.'}, status=405)
   
 
 @method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(login_required, name='dispatch')
-class StartExamSessionView(View):
+class StartExamSessionView(APIView):
     """Start a new exam session for the user"""
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return JsonResponse({'error': 'User not authenticated.'}, status=401)
+            return Response({'error': 'User not authenticated.'}, status=401)
         ExamSession.objects.create(user=request.user)
-        return JsonResponse({'message': 'Exam session started successfully.'})
+        return Response({'message': 'Exam session started successfully.'})
 
     def get(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Invalid request method.'}, status=405)
+        return Response({'error': 'Invalid request method.'}, status=405)
 
 @method_decorator(csrf_exempt, name='dispatch')
-class ListAlertsView(View):
-    """List the last 100 alerts"""
+class ListAlertsView(APIView):
 
     def get(self, request, *args, **kwargs):
         alerts = Alert.objects.order_by('-timestamp')[:100]
@@ -241,53 +242,41 @@ class ListAlertsView(View):
         for alert in alerts:
             data.append({
                 'username': alert.username,
-                'alert_type': alert.alert_type,
                 'message': alert.message,
                 'timestamp': alert.timestamp.isoformat(),
-                'biometric': getattr(alert, 'biometric', 'N/A'),
-                'device_mac': getattr(alert, 'device_mac', 'N/A'),
-                'device_type': getattr(alert, 'device_type', 'N/A'),
-                'signal_strength': getattr(alert, 'signal_strength', 'N/A'),
-                'ip_address': getattr(alert, 'ip_address', 'N/A'),
-                'wifi_ssid': getattr(alert, 'wifi_ssid', 'N/A'),
-                'latitude': getattr(alert, 'latitude', 'N/A'),
-                'longitude': getattr(alert, 'longitude', 'N/A'),
+                'photo':alert.national_id_photo,
             })
-        return JsonResponse({'alerts': data})
+        return Response({'alerts': data})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class BlockUserView(View):
+class BlockUserView(APIView):
     """Block or unblock a user by supervisor"""
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated or not request.user.is_superuser:
-            return JsonResponse({'error': 'User not authenticated or not authorized.'}, status=403)
-
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON.'}, status=400)
+            return Response({'error': 'User not authenticated or not authorized.'}, status=403)
+        data=request.data
 
         username = data.get('username')
         block = data.get('block', True)
         if not username:
-            return JsonResponse({'error': 'Username required.'}, status=400)
+            return Response({'error': 'Username required.'}, status=400)
         try:
             user = User.objects.get(username=username)
             profile = UserProfile.objects.get(user=user)
             profile.blocked = block
             profile.save()
-            return JsonResponse({'success': True, 'blocked': profile.blocked})
+            return Response({'success': True, 'blocked': profile.blocked})
         except (User.DoesNotExist, UserProfile.DoesNotExist):
-            return JsonResponse({'error': 'User not found.'}, status=404)
+            return Response({'error': 'User not found.'}, status=404)
         except Exception as e:
-            return JsonResponse({'error': f'Failed to block/unblock user: {str(e)}'}, status=500)
+            return Response({'error': f'Failed to block/unblock user: {str(e)}'}, status=500)
         return JsonResponse({'error': 'Invalid request method.'}, status=405)
     
 
 @method_decorator(csrf_exempt, name='dispatch')
-class StartBehavioralMonitoringView(View):
+class StartBehavioralMonitoringView(APIView):
     """Start behavioral monitoring for a user after successful login"""
 
     def post(self, request, *args, **kwargs):
@@ -296,11 +285,11 @@ class StartBehavioralMonitoringView(View):
             username = data.get('username')
             
             if not username:
-                return JsonResponse({'error': 'Username required'}, status=400)
+                return Response({'error': 'Username required'}, status=400)
             
             # In a real implementation, you would start the monitoring process
             # For now, we'll return success and the monitoring can be started manually
-            return JsonResponse({
+            return Response({
                 'success': True,
                 'message': f'Behavioral monitoring started for {username}',
                 'monitoring_command': f'python behavioral_monitor.py --username {username}'
@@ -309,11 +298,11 @@ class StartBehavioralMonitoringView(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': f'Failed to start monitoring: {str(e)}'}, status=500)
+            return Response({'error': f'Failed to start monitoring: {str(e)}'}, status=500)
 
     def get(self, request, *args, **kwargs):
         
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+        return Response({'error': 'Invalid request method'}, status=405)
     
 def get_env(key, default=None):
     return os.environ.get(key, getattr(settings, key, default))
@@ -321,28 +310,28 @@ def get_env(key, default=None):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class UpdatePhotoView(View):
+class UpdatePhotoView(APIView):
     """Update user's profile photo"""
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return JsonResponse({'error': 'User not authenticated.'}, status=401)
+            return Response({'error': 'User not authenticated.'}, status=401)
 
         data = json.loads(request.body)
         image_data = data.get('image')
         if not image_data:
-            return JsonResponse({'error': 'Image data required.'}, status=400)
+            return Response({'error': 'Image data required.'}, status=400)
 
         try:
             user = request.user
             profile = UserProfile.objects.get(user=user)
             photo=user.username + '_profile_photo.jpg'
-            return JsonResponse({'success': True, 'message': 'Photo updated successfully.'})
+            return Response({'success': True, 'message': 'Photo updated successfully.'})
         except UserProfile.DoesNotExist:
-            return JsonResponse({'error': 'User profile not found.'}, status=404)
+            return Response({'error': 'User profile not found.'}, status=404)
         
         except Exception as e:
-            return JsonResponse({'error': f'Failed to update photo: {str(e)}'}, status=500)
+            return Response({'error': f'Failed to update photo: {str(e)}'}, status=500)
         return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
         

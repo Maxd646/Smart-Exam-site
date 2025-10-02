@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./LoginWithBiometric.module.css";
+import { useAuth } from "./AuthContext";
+
 import {
   useGetNationalIdQuery,
   useLoginWithBiometricsMutation,
@@ -23,6 +25,7 @@ export const LoginWithBiometric = () => {
   const [countdown, setCountdown] = useState(0);
   const navigate = useNavigate();
   const videoRef = useRef(null);
+  const { login } = useAuth();
   const canvasRef = useRef(null);
   const isVerifiedWithCredentials = useSelector(
     (state) => state.user.isVerifiedWithCredentials
@@ -124,6 +127,9 @@ export const LoginWithBiometric = () => {
       setShowMatchResult(true);
       setMatchSuccess(true);
 
+      // Authenticate user
+      login();
+
       // Dispatch user data to Redux store
       dispatch(
         setCredentials({
@@ -132,9 +138,9 @@ export const LoginWithBiometric = () => {
         })
       );
 
-      // Navigate to exam after showing success
+      // Navigate to rules page
       setTimeout(() => {
-        navigate("/exam");
+        navigate("/start");
       }, 2000);
     } catch (err) {
       setShowMatchResult(true);

@@ -19,6 +19,5 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Alert)
 class AlertAdmin(admin.ModelAdmin):
-    list_display = ('username', 'timestamp', 'device_mac')
-    search_fields = ('username',  'device_mac')
+    list_display = ('username', 'timestamp')
     list_filter = ('timestamp','username')

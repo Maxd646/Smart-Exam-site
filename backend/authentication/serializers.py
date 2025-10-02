@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Alert, UserProfile, ExamSession
+from .models import Alert, UserProfile, ExamSession, Examorientetion
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,4 +17,9 @@ class ExamSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamSession
         fields = "__all__"
+class ExamorientetionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Examorientetion
+        fields = "__all__"
+        
 

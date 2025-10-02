@@ -53,70 +53,70 @@ function AdminDashboard() {
     setBlockedUsers((prev) => ({ ...prev, [username]: true }));
   };
 
-  // if (!loggedIn) {
-  //   return (
-  //     <div
-  //       style={{
-  //         maxWidth: 400,
-  //         margin: "80px auto",
-  //         padding: 32,
-  //         background: "white",
-  //         borderRadius: 12,
-  //         boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
-  //       }}
-  //     >
-  //       <h2>Supervisor Login</h2>
-  //       <form onSubmit={handleLogin}>
-  //         <input
-  //           type="text"
-  //           placeholder="Username"
-  //           value={username}
-  //           onChange={(e) => setUsername(e.target.value)}
-  //           style={{
-  //             width: "100%",
-  //             padding: 12,
-  //             marginBottom: 16,
-  //             borderRadius: 6,
-  //             border: "1px solid #ccc",
-  //           }}
-  //           required
-  //         />
-  //         <input
-  //           type="password"
-  //           placeholder="Password"
-  //           value={password}
-  //           onChange={(e) => setPassword(e.target.value)}
-  //           style={{
-  //             width: "100%",
-  //             padding: 12,
-  //             marginBottom: 16,
-  //             borderRadius: 6,
-  //             border: "1px solid #ccc",
-  //           }}
-  //           required
-  //         />
-  //         <button
-  //           type="submit"
-  //           style={{
-  //             width: "100%",
-  //             padding: 12,
-  //             background: "#667eea",
-  //             color: "white",
-  //             border: "none",
-  //             borderRadius: 6,
-  //             fontWeight: "bold",
-  //             fontSize: 16,
-  //           }}
-  //         >
-  //           Login
-  //         </button>
-  //       </form>
-  //       {loginError && (
-  //         <div style={{ color: "#dc3545", marginTop: 12 }}>{loginError}</div>
-  //       )}
-  //     </div>
-  //   );
-  // }
+  if (!loggedIn) {
+    return (
+      <div
+        style={{
+          maxWidth: 400,
+          margin: "80px auto",
+          padding: 32,
+          background: "white",
+          borderRadius: 12,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
+        }}
+      >
+        <h2>Supervisor Login</h2>
+        <form onSubmit={handleLogin}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 12,
+              marginBottom: 16,
+              borderRadius: 6,
+              border: "1px solid #ccc",
+            }}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 12,
+              marginBottom: 16,
+              borderRadius: 6,
+              border: "1px solid #ccc",
+            }}
+            required
+          />
+          <button
+            type="submit"
+            style={{
+              width: "100%",
+              padding: 12,
+              background: "#667eea",
+              color: "white",
+              border: "none",
+              borderRadius: 6,
+              fontWeight: "bold",
+              fontSize: 16,
+            }}
+          >
+            Login
+          </button>
+        </form>
+        {loginError && (
+          <div style={{ color: "#dc3545", marginTop: 12 }}>{loginError}</div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 800, margin: "auto", padding: 24 }}>

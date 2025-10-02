@@ -1,13 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
 
- const initialState = {
+const initialState = {
     username: "",
     nationalId: "",
-    biometricPhoto: null,
     isVerifiedWithCredentials: false,
     isVerifiedWithBiometrics: false,
-    //add the others here
-}
+};
 
 const userSlice = createSlice({
     name: "user",
@@ -15,27 +13,21 @@ const userSlice = createSlice({
     reducers: {
         setCredentials: (state, action) => {
             state.username = action.payload.username;
-            state.nationalId = action.payload?.nationalId;
-            state.biometricPhoto = action.payload?.biometricPhoto;
+            state.nationalId = action.payload?.photo_url || null; // only keep national ID
             state.isVerifiedWithCredentials = action.payload?.isVerifiedWithCredentials || false;
             state.isVerifiedWithBiometrics = action.payload?.isVerifiedWithBiometrics || false;
         },
         logOut: (state) => {
             state.username = "";
             state.nationalId = "";
-            state.biometricPhoto = null;
-            //add the others here
-        },
-        setBiometricPhoto: (state, action) => {
-            state.biometricPhoto = action.payload?.biometricPhoto;
+            state.isVerifiedWithCredentials = false;
+            state.isVerifiedWithBiometrics = false;
         },
         setNationalId: (state, action) => {
-            state.nationalId = action.payload?.nationalId;
+            state.nationalId = action.payload?.photo_url || null;
         }
-
     }
-})
+});
 
-
-export const { setCredentials, logOut, setBiometricPhoto, setNationalId } = userSlice.actions;
+export const { setCredentials, logOut, setNationalId } = userSlice.actions;
 export default userSlice.reducer;
