@@ -16,7 +16,6 @@ function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Handle credentials submission
   const handleCredentialsSubmit = async (e) => {
     e.preventDefault();
 
@@ -27,29 +26,32 @@ function Login() {
 
     setLoading(true);
     setError("");
+
     try {
       const res = await login({ username, password }).unwrap();
-      console.log("Login successful:", res);
+      console.log("Login response:", res);
 
-      if (res.verified === true) {
-        // Dispatch user data to Redux store
+      if (res.verified) {
         dispatch(
           setCredentials({
             username: res.username,
             isVerifiedWithCredentials: true,
           })
         );
-
-        navigate("/login/biometric");
+        if (res.step === "credentials_verified") {
+          navigate("/login/biometric");
+        } else if (res.step === "no_profile") {
+          navigate(`/register/${res.username}`);
+        }
       } else {
-        setError("Invalid username or password. Please try again.");
+        setError(res.error || "Invalid username or password.");
       }
     } catch (err) {
       setError("Network error. Please check your connection and try again.");
     }
+
     setLoading(false);
   };
-
   return (
     <div className={styles.container}>
       <div className={styles.loginCard}>

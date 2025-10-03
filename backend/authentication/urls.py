@@ -13,8 +13,10 @@ from . views import (
     UpdatePhotoView,
     NationalIDPhotoView,
     logoutView,
-    ListExamorientetionView
-    
+    ListExamorientetionView,
+    AdminstatusView,
+    AdminLoginView,
+    AdminlogoutView 
 )
 
 
@@ -30,10 +32,15 @@ urlpatterns = [
     path('national_id_photo/<str:username>/', NationalIDPhotoView.as_view(), name='national_id_photo'),
     path('exam_orientetions/', ListExamorientetionView.as_view(), name='exam_orientetions'),
     path('register_with_national_id/', RegisterWithNationalIDView.as_view(), name='register_with_national_id'),
+    path("Adminlogin/", AdminLoginView.as_view(), name="AdminLogin"),
+    path("Adminlogout/", AdminlogoutView.as_view(), name="AdminLogout"),
+    path("Adminstatus/", AdminstatusView.as_view(), name="AdminStatus"),
+
+
     # path('fayda_callback/', FaydaCallbackView.as_view(), name='fayda_callback'),
     # path('verifayda_login/', Verifayda_loginView.as_view(), name='verifayda_login'),
     # path('fayda_callback/', FaydaCallbackView.as_view(), name='fayda_callback'),
     # path('fayda_callback/', FaydaCallbackView.as_view(), name='fayda_callback'),
-    # path('register_with_national_id/', RegisterWithNationalIDView.as_view(), name='register_with_national_id'),
+
 ]
 

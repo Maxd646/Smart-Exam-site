@@ -63,13 +63,48 @@ def compare_faces(known_image_path, unknown_base64_image):
         return False
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class AdminLoginView(APIView):
+    """Admin login view"""
 
-# --- Registration ---
+    def post(self, request, *args, **kwargs):
+        data=request.data
+        username = data.get('username')
+        password = data.get('password')
+        user= authenticate(username=username, password=password)
+        if user is not None and user.is_superuser:
+            return Response({'success': True, 'message': 'Admin login successful.'})
+        
+        return Response({'success': False, 'error': 'Invalid admin credentials.'}, status=401)
+        
+@method_decorator(csrf_exempt, name='dispatch')
+class AdminstatusView(APIView):
+    """Check if admin is logged in"""
+
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.is_superuser:
+            return Response({'is_admin': True})
+        return Response({'is_admin': False})
+@method_decorator(csrf_exempt, name='dispatch')
+class AdminlogoutView(APIView):
+    """Admin logout view"""
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_superuser:
+            return Response({'error': 'User not authenticated or not an admin.'}, status=403)
+        from django.contrib.auth import logout
+        logout(request)
+        return Response({'message': 'Admin logged out successfully.'})
+
+@method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(csrf_exempt, name='dispatch')
 class RegisterWithNationalIDView(APIView):
     def post(self, request, *args, **kwargs):
+        # Get username from POST
         username = request.POST.get("username")
-        password = request.POST.get("password")
+        if not username:
+            return Response({"error": "Username not provided. Contact admin."}, status=400)
+
         full_name = request.POST.get("full_name")
         national_id = request.POST.get("national_id")
         photo = request.FILES.get("national_id_photo")
@@ -78,23 +113,37 @@ class RegisterWithNationalIDView(APIView):
         education_level = request.POST.get("education_level")
         rf_identifier = request.POST.get("rf_identifier")
 
-
-        if not all([username, password, full_name, national_id, photo,address, age, education_level, rf_identifier]):
+        if not all([full_name, national_id, photo, address, age, education_level, rf_identifier]):
             return Response({"error": "All fields are required."}, status=400)
 
-        if User.objects.filter(username=username).exists():
-            return Response({"error": "Username already exists."}, status=400)
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({"error": "Username does not exist. Contact admin."}, status=400)
 
-        user = User.objects.create_user(username=username, password=password)
+        if UserProfile.objects.filter(user=user).exists():
+            return Response({"error": "User profile already exists."}, status=400)
+
+        # Create profile
         profile = UserProfile.objects.create(
             user=user,
             full_name=full_name,
             national_id=national_id,
-            national_id_photo=photo
+            national_id_photo=photo,
+            address=address,
+            age=age,
+            education_level=education_level,
+            rf_identifier=rf_identifier
         )
-        return Response({"success": True, "message": "Student registered successfully."})
 
+        return Response({
+            "success": True,
+            "message": "User registered successfully. Please login to continue.",
+            "username": user.username
+        })
 
+    def get(self, request, *args, **kwargs):
+        return Response({'error': 'Invalid request method.'}, status=405)
 # --- show the registered national id---
 @method_decorator(csrf_exempt, name='dispatch')
 class NationalIDPhotoView(APIView):
@@ -147,34 +196,32 @@ class VerifyCredentialsView(APIView):
                 'step': 'credentials_failed'
             }, status=401)
 
-        try:
-            profile = UserProfile.objects.get(user=user)
-            if profile.blocked:
-                return Response({
-                    'verified': False,
-                    'error': 'User is blocked by supervisor.',
-                    'step': 'blocked'
-                }, status=403)
-
-            return Response({
-                'verified': True,
-                'username': username,
-                'step': 'credentials_verified',
-                'photo_url': request.build_absolute_uri(profile.national_id_photo.url),
-                'message': 'Credentials verified. Please provide biometric data.',
-
-            })
-        except UserProfile.DoesNotExist:
+        profile= UserProfile.objects.filter(user=user).first()
+        if profile and getattr(profile, 'blocked', False):  
             return Response({
                 'verified': False,
-                'error': 'User profile not found. Please register biometric data.',
-                'step': 'no_profile'
-            }, status=404)
-
+                'error': 'User is blocked by supervisor.',
+                'step': 'blocked'
+            }, status=403)
+        if profile:
+            return Response({
+            'verified': True,
+            'username': username,
+            'step': 'credentials_verified',
+            "photo_url":profile.national_id_photo.url if profile and profile.national_id_photo else None,
+            'message': 'Credentials verified. Please provide biometric data.' 
+        }, status=200)
+        else:
+            return Response({
+                "verified": True,
+                "username": username,
+                "step": "no_profile",
+                "message": "No profile found. Please complete registration."
+            }, status=200) 
+        
     def get(self, request, *args, **kwargs):
         return Response({'error': 'Invalid request method.'}, status=405)
     
-
 @method_decorator(csrf_exempt, name='dispatch')
 class VerifyBiometricView(APIView):
     def post(self, request):
@@ -332,9 +379,8 @@ class UpdatePhotoView(APIView):
         
         except Exception as e:
             return Response({'error': f'Failed to update photo: {str(e)}'}, status=500)
-        return JsonResponse({'error': 'Invalid request method.'}, status=405)
+        return Response({'error': 'Invalid request method.'}, status=405)
 
-        
         
 # @method_decorator(csrf_exempt, name='dispatch')
 # class UploadFaceImageView(View):

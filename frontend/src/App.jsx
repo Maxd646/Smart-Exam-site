@@ -9,6 +9,7 @@ import { NotFound } from "./components/sections/notFound";
 import RulesPage from "./components/sections/RulesPage";
 import { AuthProvider } from "./components/sections/AuthContext";
 import ProtectedRoute from "./components/sections/ProtectedRoute";
+import Register from "./components/sections/Register";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<HeroSection />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register/:username" element={<Register />} />
           <Route path="/login/biometric" element={<LoginWithBiometric />} />
 
           {/* Protected Routes */}

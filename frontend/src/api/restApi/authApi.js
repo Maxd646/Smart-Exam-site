@@ -32,6 +32,19 @@ export const authApi = createApi({
       async onQueryStarted() {}, //optional, can be used for optimistic updates
       async onCacheEntryAdded() {}, //optional, can be used to manage cache
     }),
+    // inside endpoints in authApi
+register: build.mutation({
+  query: (formData) => ({
+    url: "/authentication/register_with_national_id/",
+    method: "POST",
+    body: formData,
+  }),
+  transformResponse: (response) => response,
+  transformErrorResponse: (error) => ({
+    message: error.data?.error || "Registration failed",
+    status: error.status,
+  }),
+}),
     //login with biometrics
     loginWithBiometrics: build.mutation({
       query: (credentials) => ({
@@ -92,5 +105,6 @@ export const {
   useLoginMutation,
   useLoginWithBiometricsMutation,
   useLogoutMutation,
-  useGetNationalIdQuery
+  useGetNationalIdQuery,
+  useRegisterMutation,
 } = authApi;
