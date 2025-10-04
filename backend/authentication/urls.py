@@ -16,13 +16,16 @@ from . views import (
     ListExamorientetionView,
     AdminstatusView,
     AdminLoginView,
-    AdminlogoutView 
+    AdminlogoutView,
+    EndExamSessionView,
+    SubmitExamView,
+    ExamQuestionView
+
 )
 
 
 urlpatterns = [
     path('logout/', logoutView.as_view(), name='logout'),
-    path('start_exam_session/', StartExamSessionView.as_view(), name='start_exam_session'),
     path('verify_credentials/', VerifyCredentialsView.as_view(), name='verify_credentials'),    
     path('verify_biometric/', VerifyBiometricView.as_view(), name='verify_biometric'),
     path('list_alerts/', ListAlertsView.as_view(), name='list_alerts'), 
@@ -35,6 +38,10 @@ urlpatterns = [
     path("Adminlogin/", AdminLoginView.as_view(), name="AdminLogin"),
     path("Adminlogout/", AdminlogoutView.as_view(), name="AdminLogout"),
     path("Adminstatus/", AdminstatusView.as_view(), name="AdminStatus"),
+    path('end_exam_session/', EndExamSessionView.as_view(), name='end_exam_session'),
+    path('submit_exam/', SubmitExamView.as_view(), name='submit_exam'),
+    path('start_exam_session/', StartExamSessionView.as_view(), name='start_exam_session'),
+    path('exam/questions/', ExamQuestionView.as_view(), name='exam_questions'),
 
 
     # path('fayda_callback/', FaydaCallbackView.as_view(), name='fayda_callback'),

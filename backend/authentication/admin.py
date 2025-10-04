@@ -1,5 +1,9 @@
 from django.contrib import admin
-from .models import UserProfile, ExamSession, Alert
+from .models import (
+    UserProfile, 
+    Alert,
+    ExamQuestion
+    )
 
 admin.site.site_header = 'Anti-Cheating Admin management system'
 admin.site.site_title = 'Anti-Cheating Admin Portal'
@@ -21,3 +25,8 @@ class UserProfileAdmin(admin.ModelAdmin):
 class AlertAdmin(admin.ModelAdmin):
     list_display = ('username', 'timestamp')
     list_filter = ('timestamp','username')
+
+@admin.register(ExamQuestion)
+class ExamQuestionAdmin(admin.ModelAdmin):
+    list_display=('question_text', 'number')
+    

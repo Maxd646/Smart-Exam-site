@@ -1,106 +1,136 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { initSecurityListeners } from "../../utils/security";
-
-import "./ExamInterface.css";
+import {
+  useGetExamQuestionsQuery,
+  useSubmitExamMutation,
+} from "../../api/restApi/examApi";
 
 export default function ExamInterface() {
-  const [warning, setWarning] = useState("");
-  const warningTimeout = useRef(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [questions, setQuestions] = useState([]);
-  const { username, nationalId } = useSelector((state) => state.user);
-  const navigate = useNavigate();
+  const username = useSelector(
+    (state) => state.auth?.user?.username || "Guest"
+  );
+  const { data: questions = [], isLoading } = useGetExamQuestionsQuery();
+  const [submitExam] = useSubmitExamMutation();
 
-  const user = { username: username || "Unknown User", nationalId };
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 min = 900s
+  const timerRef = useRef(null);
 
-  const showWarning = (msg, type) => {
-    setWarning(msg);
-    if (warningTimeout.current) clearTimeout(warningTimeout.current);
-    warningTimeout.current = setTimeout(() => setWarning(""), 4000);
-    console.log(
-      `[SECURITY ALERT] Type: ${type}, User: ${user.username}, Message: ${msg}`
-    );
-    // TODO: Send alert via WebSocket
+  // Countdown timer
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          handleSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, []);
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? "0" + s : s}`;
   };
 
-  // Init Security Listeners
-  useEffect(() => {
-    const removeListeners = initSecurityListeners(showWarning);
-    return removeListeners;
-  }, []);
+  const handleAnswerSelect = (option) => {
+    setAnswers({ ...answers, [questions[currentIndex].id]: option });
+  };
 
-  // Example: Randomize questions for extra security
-  useEffect(() => {
-    const sampleQuestions = [
-      "What is the time complexity of binary search?",
-      "What does HTTP stand for?",
-      "What is React used for?",
-      "What is CSS?",
-    ];
-    setQuestions(sampleQuestions.sort(() => Math.random() - 0.5));
-  }, []);
+  const handleNext = () => {
+    if (currentIndex < questions.length - 1) setCurrentIndex(currentIndex + 1);
+  };
+
+  const handlePrevious = () => {
+    if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
+  };
+
+  const handleSubmit = async () => {
+    const payload = {
+      username,
+      answers,
+    };
+    try {
+      await submitExam(payload).unwrap();
+      alert("✅ Exam submitted successfully!");
+    } catch (error) {
+      console.error("Submit error:", error);
+      alert("❌ Failed to submit exam.");
+    }
+  };
+
+  if (isLoading)
+    return <div className="text-center mt-10">Loading questions...</div>;
+  if (questions.length === 0)
+    return <div className="text-center mt-10">No questions available.</div>;
+
+  const currentQuestion = questions[currentIndex];
 
   return (
-    <div className="exam-container">
-      <div className="exam-box">
-        {/* Header */}
-        <div className="exam-header">
-          <div className="user-info">
-            {user.nationalId && <img src={user.nationalId} alt="National ID" />}
-            <h1>Welcome, {user.username}!</h1>
-          </div>
-          <div className="secure-badge">🔒 SECURE MODE</div>
+    <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center relative">
+      {/* Timer */}
+      <div className="absolute top-6 right-8 text-lg font-semibold text-red-600">
+        ⏰ Time Left: {formatTime(timeLeft)}
+      </div>
+
+      <h2 className="text-2xl font-bold mb-6">Exam Interface</h2>
+      <p className="mb-4 text-gray-700">
+        Welcome, <strong>{username}</strong>
+      </p>
+
+      <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl">
+        <h3 className="text-lg font-semibold mb-4">
+          Question {currentIndex + 1} of {questions.length}
+        </h3>
+        <p className="mb-4 text-gray-800">{currentQuestion.text}</p>
+
+        <div className="space-y-3">
+          {currentQuestion.options.map((option, idx) => (
+            <label
+              key={idx}
+              className="flex items-center space-x-2 cursor-pointer"
+            >
+              <input
+                type="radio"
+                name={`question-${currentQuestion.id}`}
+                value={option}
+                checked={answers[currentQuestion.id] === option}
+                onChange={() => handleAnswerSelect(option)}
+              />
+              <span>{option}</span>
+            </label>
+          ))}
         </div>
 
-        {/* Warning */}
-        {warning && <div className="warning-box">⚠️ {warning}</div>}
-
-        {/* Exam Section */}
-        <div className="exam-section">
-          <div className="instructions">
-            <h3>Instructions:</h3>
-            <ul>
-              <li>This exam contains 50 multiple-choice questions</li>
-              <li>You have 120 minutes to complete the exam</li>
-              <li>Each question has only one correct answer</li>
-              <li>You cannot go back to previous questions</li>
-              <li>Your session is monitored for security</li>
-            </ul>
-          </div>
-
-          {questions.map((q, index) => (
-            <div key={index} className="question">
-              <h4>{`Q${index + 1}: ${q}`}</h4>
-              <div className="options">
-                {["Option A", "Option B", "Option C", "Option D"].map(
-                  (option, i) => (
-                    <label key={i}>
-                      <input type="radio" name={`q${index}`} value={option} />
-                      {option}
-                    </label>
-                  )
-                )}
-              </div>
-            </div>
-          ))}
-
-          {/* Navigation */}
-          <div className="navigation">
-            <button className="prev-button" disabled>
-              ← Previous
+        <div className="flex justify-between mt-6">
+          <button
+            onClick={handlePrevious}
+            disabled={currentIndex === 0}
+            className={`px-4 py-2 rounded ${
+              currentIndex === 0 ? "bg-gray-300" : "bg-blue-500 text-white"
+            }`}
+          >
+            Previous
+          </button>
+          {currentIndex < questions.length - 1 ? (
+            <button
+              onClick={handleNext}
+              className="px-4 py-2 bg-green-500 text-white rounded"
+            >
+              Next
             </button>
-            <button className="next-button" onClick={() => setSubmitted(true)}>
-              Next →
+          ) : (
+            <button
+              onClick={handleSubmit}
+              className="px-4 py-2 bg-red-600 text-white rounded"
+            >
+              Submit
             </button>
-          </div>
-
-          {/* Submitted Message */}
-          {submitted && (
-            <div className="submitted-message">
-              ✅ Thank you for completing the exam!
-            </div>
           )}
         </div>
       </div>

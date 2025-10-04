@@ -9,7 +9,13 @@ from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import UserProfile, ExamSession, Alert, Examorientetion
+from .models import (
+    UserProfile, 
+    ExamSession, 
+    Alert, 
+    Examorientetion,
+    ExamAnswer,
+    ExamQuestion)
 from django.views.decorators.http import require_GET
 import os, json, requests, base64, io
 from django.shortcuts import redirect
@@ -17,7 +23,54 @@ from urllib.parse import urlencode
 from django.core.files.storage import default_storage
 from io import BytesIO
 from PIL import Image
-from.serializers import ExamorientetionSerializer
+from.serializers import(
+   ExamorientetionSerializer,
+   UserProfileSerializer,
+   AlertSerializer, 
+   ExamSessionSerializer, 
+   ExamAnswerSerializer, 
+   ExamQuestionSerializer
+)
+from django.shortcuts import get_object_or_404
+from django.core.files.base import ContentFile
+from django.db import transaction
+import datetime, logging, traceback, uuid
+from rest_framework import status
+
+
+def json_ok(message, **kwargs):
+    payload = {"success": True, "message": message}
+    payload.update(kwargs)
+    return Response(payload, status=200)
+
+def json_fail(message, code=status.HTTP_400_BAD_REQUEST, **kwargs):
+    payload = {"success": False, "error": message}
+    payload.update(kwargs)
+    return Response(payload, status=code)
+
+def save_base64_image(base64_str, folder='uploads', filename=None):
+    """
+    Save a base64 image to MEDIA_ROOT/<folder>/filename and return relative path.
+    Accepts data URLs ("data:image/jpeg;base64,....") or raw base64.
+    """
+    try:
+        if ',' in base64_str:
+            header, base64_str = base64_str.split(',', 1)
+        decoded = base64.b64decode(base64_str)
+    except Exception as e:
+        raise ValueError("Invalid base64 image") from e
+
+    if not filename:
+        filename = f"{uuid.uuid4().hex}.jpg"
+    path = os.path.join(folder, filename)
+    full_path = os.path.join(settings.MEDIA_ROOT, path)
+
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    with open(full_path, 'wb') as f:
+        f.write(decoded)
+
+    return path  # relative path stored in model fields that use FileField/ImageField
+
 
 
 def compare_faces(known_image_path, unknown_base64_image):
@@ -95,8 +148,8 @@ class AdminlogoutView(APIView):
         from django.contrib.auth import logout
         logout(request)
         return Response({'message': 'Admin logged out successfully.'})
+    
 
-@method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(csrf_exempt, name='dispatch')
 class RegisterWithNationalIDView(APIView):
     def post(self, request, *args, **kwargs):
@@ -144,6 +197,12 @@ class RegisterWithNationalIDView(APIView):
 
     def get(self, request, *args, **kwargs):
         return Response({'error': 'Invalid request method.'}, status=405)
+class ExamQuestionView(APIView):
+    def get(self, request):
+        questions = ExamQuestion.objects.all()
+        serializer = ExamQuestionSerializer(questions, many=True)
+        return Response(serializer.data)
+
 # --- show the registered national id---
 @method_decorator(csrf_exempt, name='dispatch')
 class NationalIDPhotoView(APIView):
@@ -167,12 +226,6 @@ class NationalIDPhotoView(APIView):
         except (User.DoesNotExist, UserProfile.DoesNotExist):
             return Response({'error': 'User not found.'}, status=404)
         
-@method_decorator(csrf_exempt, name='dispatch' )
-class ListExamorientetionView(APIView):
-    def get(self, request, *args, **kwargs):
-        exam_orientetions = Examorientetion.objects.all()
-        serializer = ExamorientetionSerializer(exam_orientetions, many=True)
-        return Response(serializer.data, safe=False)
 
 # --- Verify credentials with traditional (login with username and password)---
 @method_decorator(csrf_exempt, name='dispatch')
@@ -264,37 +317,6 @@ class logoutView(APIView):
 
     def get(self, request, *args, **kwargs):
         return Response({'error': 'Invalid request method.'}, status=405)
-  
-
-@method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(login_required, name='dispatch')
-class StartExamSessionView(APIView):
-    """Start a new exam session for the user"""
-
-    def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return Response({'error': 'User not authenticated.'}, status=401)
-        ExamSession.objects.create(user=request.user)
-        return Response({'message': 'Exam session started successfully.'})
-
-    def get(self, request, *args, **kwargs):
-        return Response({'error': 'Invalid request method.'}, status=405)
-
-@method_decorator(csrf_exempt, name='dispatch')
-class ListAlertsView(APIView):
-
-    def get(self, request, *args, **kwargs):
-        alerts = Alert.objects.order_by('-timestamp')[:100]
-        data = []
-        for alert in alerts:
-            data.append({
-                'username': alert.username,
-                'message': alert.message,
-                'timestamp': alert.timestamp.isoformat(),
-                'photo':alert.national_id_photo,
-            })
-        return Response({'alerts': data})
-
 
 @method_decorator(csrf_exempt, name='dispatch')
 class BlockUserView(APIView):
@@ -320,7 +342,110 @@ class BlockUserView(APIView):
         except Exception as e:
             return Response({'error': f'Failed to block/unblock user: {str(e)}'}, status=500)
         return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+@method_decorator(csrf_exempt, name='dispatch') 
+class ExamAnswerView(APIView):
+    @method_decorator(csrf_exempt)
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        try:
+            data = request.data
+            session_id = data.get('session_id')
+            question_id = data.get('question_id')
+            submitted_answer = data.get('submitted_answer')
+
+            if not all([session_id, question_id, submitted_answer]):
+                return json_fail("session_id, question_id, and submitted_answer are required.", code=status.HTTP_400_BAD_REQUEST)
+
+            session = get_object_or_404(ExamSession, id=session_id, user=request.user)
+
+            answer = ExamAnswer.objects.create(
+                session=session,
+                question_id=question_id,
+                submitted_answer=submitted_answer
+            )
+
+            serializer = ExamAnswerSerializer(answer)
+            return json_ok("Answer recorded successfully.", answer=serializer.data)
+
+        except Exception as e:
+            return json_fail(str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class StartExamSessionView(APIView):
+    @method_decorator(csrf_exempt)
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        try:
+            existing_session = ExamSession.objects.filter(user=request.user, ended_at__isnull=True).first()
+            if existing_session:
+                return json_fail("An active exam session already exists.", code=status.HTTP_400_BAD_REQUEST)
+
+            session = ExamSession.objects.create(user=request.user)
+            return json_ok("Exam session started.", session_id=session.id)
+        except Exception as e:
+            return json_fail(str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+@method_decorator(csrf_exempt, name='dispatch')
+class SubmitExamView(APIView):
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        # Expect { session_id, answers, duration }
+        session_id = request.data.get('session_id')
+        answers = request.data.get('answers', {})
+        if not session_id:
+            return json_fail("session_id required.", code=status.HTTP_400_BAD_REQUEST)
+        try:
+            session = ExamSession.objects.get(id=session_id, user=request.user)
+            # TODO: implement grading logic; for now persist answers and mark submitted
+            session.submitted_at = datetime.datetime.utcnow()
+            session.answers = json.dumps(answers)
+            session.submitted = True
+            session.save()
+            # TODO: enqueue grading job or compute score now
+            return json_ok("Exam submitted successfully.", session_id=session.id)
+        except ExamSession.DoesNotExist:
+            return json_fail("Exam session not found.", code=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return json_fail(str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class EndExamSessionView(APIView):
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        session_id = request.data.get('session_id')
+        if not session_id:
+            return json_fail("session_id required.", code=status.HTTP_400_BAD_REQUEST)
+        try:
+            session = ExamSession.objects.get(id=session_id, user=request.user)
+            session.ended_at = datetime.datetime.utcnow()
+            session.save()
+            return json_ok("Exam session ended.", session_id=session.id)
+        except ExamSession.DoesNotExist:
+            return json_fail("Exam session not found.", code=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return json_fail(str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+@method_decorator(csrf_exempt, name='dispatch' )
+class ListExamorientetionView(APIView):
+    def get(self, request, *args, **kwargs):
+        exam_orientetions = Examorientetion.objects.all()
+        serializer = ExamorientetionSerializer(exam_orientetions, many=True)
+        return Response(serializer.data, safe=False)
     
+@method_decorator(csrf_exempt, name='dispatch')
+class ListAlertsView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        alerts = Alert.objects.order_by('-timestamp')[:100]
+        data = []
+        for alert in alerts:
+            data.append({
+                'username': alert.username,
+                'message': alert.message,
+                'timestamp': alert.timestamp.isoformat(),
+                'photo':alert.national_id_photo,
+            })
+        return Response({'alerts': data})
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class StartBehavioralMonitoringView(APIView):
@@ -381,7 +506,8 @@ class UpdatePhotoView(APIView):
             return Response({'error': f'Failed to update photo: {str(e)}'}, status=500)
         return Response({'error': 'Invalid request method.'}, status=405)
 
-        
+
+
 # @method_decorator(csrf_exempt, name='dispatch')
 # class UploadFaceImageView(View):
 #     """Upload a face image for verification"""
