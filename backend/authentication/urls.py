@@ -19,7 +19,8 @@ from . views import (
     AdminlogoutView,
     EndExamSessionView,
     SubmitExamView,
-    ExamQuestionView
+    ExamQuestionView,
+    RegistrationGuidanceView
 
 )
 
@@ -42,8 +43,7 @@ urlpatterns = [
     path('submit_exam/', SubmitExamView.as_view(), name='submit_exam'),
     path('start_exam_session/', StartExamSessionView.as_view(), name='start_exam_session'),
     path('exam/questions/', ExamQuestionView.as_view(), name='exam_questions'),
-
-
+    path('RegistrationGuidance/', RegistrationGuidanceView.as_view, name ="RegistrationGuidance"),
     # path('fayda_callback/', FaydaCallbackView.as_view(), name='fayda_callback'),
     # path('verifayda_login/', Verifayda_loginView.as_view(), name='verifayda_login'),
     # path('fayda_callback/', FaydaCallbackView.as_view(), name='fayda_callback'),

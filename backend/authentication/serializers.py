@@ -5,7 +5,8 @@ from .models import (
     ExamSession, 
     Examorientetion, 
     ExamAnswer, 
-    ExamQuestion
+    ExamQuestion,
+    RegistrationGuidance
 )
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -49,3 +50,7 @@ class ExamQuestionSerializer(serializers.ModelSerializer):
             "C": obj.option_c,
             "D": obj.option_d
         }
+class RegistrationGuidanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model =RegistrationGuidance
+        fields="__all__"

@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRegisterMutation } from "../../api/restApi/authApi";
 import Webcam from "react-webcam";
+
 import {
   FaLock,
   FaUser,
@@ -104,8 +105,8 @@ export default function Register() {
       );
 
       const res = await register(data).unwrap();
-      if (res.success) navigate("/login/biometric");
-      else setError(res.error || "Registration failed");
+      if (res.success) navigate("/login");
+      else setError(res.error || "Username does not exist. Contact admin.");
     } catch (err) {
       setError(err.message || "Network error");
     }

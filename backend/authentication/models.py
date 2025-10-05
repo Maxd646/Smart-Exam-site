@@ -83,7 +83,7 @@ class Examorientetion(models.Model):
 class RegistrationGuidance(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
-    video_url = models.URLField(blank=True, null=True)  
+    media = models.FileField(upload_to='guidance/', null=True, blank=True)
     order = models.PositiveIntegerField(default=0)  
 
     def __str__(self):

@@ -15,7 +15,9 @@ from .models import (
     Alert, 
     Examorientetion,
     ExamAnswer,
-    ExamQuestion)
+    ExamQuestion,
+    RegistrationGuidance
+    )
 from django.views.decorators.http import require_GET
 import os, json, requests, base64, io
 from django.shortcuts import redirect
@@ -29,7 +31,8 @@ from.serializers import(
    AlertSerializer, 
    ExamSessionSerializer, 
    ExamAnswerSerializer, 
-   ExamQuestionSerializer
+   ExamQuestionSerializer,
+   RegistrationGuidanceSerializer
 )
 from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
@@ -149,6 +152,12 @@ class AdminlogoutView(APIView):
         logout(request)
         return Response({'message': 'Admin logged out successfully.'})
     
+@method_decorator(csrf_exempt, name='dispatch')
+class RegistrationGuidanceView(APIView):
+       def get(request, *args, **kwargs ):
+           RegistrationGuidance= RegistrationGuidance.objects.all()
+           serializer = RegistrationGuidanceSerializer(RegistrationGuidance, many=True)
+           return Response(serializer.data)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RegisterWithNationalIDView(APIView):

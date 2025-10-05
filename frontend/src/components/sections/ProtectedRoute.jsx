@@ -4,10 +4,10 @@ import { useAuth } from "./AuthContext";
 
 export default function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
-
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
+  // ✅ If verified → allow access
   return children;
 }

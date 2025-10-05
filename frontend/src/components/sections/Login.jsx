@@ -4,6 +4,7 @@ import styles from "./Login.module.css";
 import { useLoginMutation } from "../../api/restApi/authApi";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../../features/auth/authSlice";
+import { useAuth } from "./AuthContext"; // ✅ import AuthContext
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -13,6 +14,7 @@ function Login() {
   const [login, result] = useLoginMutation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { login: authLogin } = useAuth(); // ✅ get login function from context
 
   const handleCredentialsSubmit = async (e) => {
     e.preventDefault();
@@ -30,26 +32,35 @@ function Login() {
       console.log("Login response:", res);
 
       if (res.verified) {
+        // ✅ update redux state
         dispatch(
           setCredentials({
             username: res.username,
             isVerifiedWithCredentials: true,
           })
         );
+
+        // ✅ mark credential verified in context
+        authLogin();
+
+        // navigate based on backend step
         if (res.step === "credentials_verified") {
-          navigate("/login/biometric");
+          navigate("/login/biometric"); // go to biometric
         } else if (res.step === "no_profile") {
-          navigate(`/register/${res.username}`);
+          navigate(`/register/${res.username}`); // go to registration
+        } else if (res.step === "blocked") {
+          setError("User is blocked by supervisor.");
         }
       } else {
         setError(res.error || "Invalid username or password.");
       }
     } catch (err) {
-      setError("Network error. Please check your connection and try again.");
+      setError("Invalid username or password.");
     }
 
     setLoading(false);
   };
+
   return (
     <div className={styles.container}>
       <div className={styles.loginCard}>
