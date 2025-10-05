@@ -154,10 +154,10 @@ class AdminlogoutView(APIView):
     
 @method_decorator(csrf_exempt, name='dispatch')
 class RegistrationGuidanceView(APIView):
-       def get(request, *args, **kwargs ):
-           RegistrationGuidance= RegistrationGuidance.objects.all()
-           serializer = RegistrationGuidanceSerializer(RegistrationGuidance, many=True)
-           return Response(serializer.data)
+    def get(self, request, *args, **kwargs):  # <-- add self
+        guidance = RegistrationGuidance.objects.all()
+        serializer = RegistrationGuidanceSerializer(guidance, many=True)
+        return Response(serializer.data)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RegisterWithNationalIDView(APIView):
@@ -433,13 +433,13 @@ class EndExamSessionView(APIView):
         except Exception as e:
             return json_fail(str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-@method_decorator(csrf_exempt, name='dispatch' )
 class ListExamorientetionView(APIView):
     def get(self, request, *args, **kwargs):
-        exam_orientetions = Examorientetion.objects.all()
-        serializer = ExamorientetionSerializer(exam_orientetions, many=True)
-        return Response(serializer.data, safe=False)
+        exams = Examorientetion.objects.all()
+        serializer = ExamorientetionSerializer(exams, many=True, context={'request': request})
+        return Response(serializer.data)
     
+
 @method_decorator(csrf_exempt, name='dispatch')
 class ListAlertsView(APIView):
 

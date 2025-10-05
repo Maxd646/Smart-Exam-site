@@ -1,103 +1,76 @@
 import baseQury from "./basequery";
-
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const authApi = createApi({
-  reducerPath: "authApi", //name of the slice, used while configuring in the store
-  baseQuery: fetchBaseQuery({
-    baseUrl: baseQury(),
-  }),
-  tagTypes: ["Auth", "User"], //used for invalidating the cache
+  reducerPath: "authApi",
+  baseQuery: fetchBaseQuery({ baseUrl: baseQury() }),
+  tagTypes: ["Auth", "User"],
   endpoints: (build) => ({
-    //login endpoint
     login: build.mutation({
       query: (credentials) => ({
         url: "/authentication/verify_credentials/",
         method: "POST",
         body: credentials,
       }),
-      transformResponse: (response) => {
-        console.log("Login response:", response);
-        //handle login response
-        return response;
-      },
-      transformErrorResponse: (error) => {
-        //handle error response
-        console.error("Login error:", error);
-        return {
-          message: error.data.message,
-          status: error.status,
-        };
-      },
-      async onQueryStarted() {}, //optional, can be used for optimistic updates
-      async onCacheEntryAdded() {}, //optional, can be used to manage cache
+      transformResponse: (response) => response,
+      transformErrorResponse: (error) => ({
+        message: error.data.message,
+        status: error.status,
+      }),
     }),
-    // inside endpoints in authApi
-register: build.mutation({
-  query: (formData) => ({
-    url: "/authentication/register_with_national_id/",
-    method: "POST",
-    body: formData,
-  }),
-  transformResponse: (response) => response,
-  transformErrorResponse: (error) => ({
-    message: error.data?.error || "Registration failed",
-    status: error.status,
-  }),
-}),
-    //login with biometrics
+    register: build.mutation({
+      query: (formData) => ({
+        url: "/authentication/register_with_national_id/",
+        method: "POST",
+        body: formData,
+      }),
+      transformResponse: (response) => response,
+      transformErrorResponse: (error) => ({
+        message: error.data?.error || "Registration failed",
+        status: error.status,
+      }),
+    }),
     loginWithBiometrics: build.mutation({
       query: (credentials) => ({
         url: "/authentication/verify_biometric/",
         method: "POST",
         body: credentials,
       }),
-      transformResponse: (response) => {
-        console.log("Biometric login response:", response);
-        //handle biometric login response
-        return response;
-      },
-      transformErrorResponse: (error) => {
-        //handle error response
-        console.error("Biometric login error:", error);
-        return {
-          message: error.data?.message,
-          status: error?.status,
-          error:error
-        };
-      },
-      async onQueryStarted() {}, //optional, can be used for optimistic updates
-      async onCacheEntryAdded() {}, //optional, can be used to manage cache
-    }),
-    //logout endpoint
-    logout: build.mutation({
-      query: () => ({
-        url: "/authentication/logout",
-        method: "POST",
+      transformResponse: (response) => response,
+      transformErrorResponse: (error) => ({
+        message: error.data?.message,
+        status: error?.status,
+        error: error,
       }),
-      async onQueryStarted() {}, //optional, can be used for optimistic updates
-      async onCacheEntryAdded() {}, //optional, can be used to manage cache
+    }),
+    logout: build.mutation({
+      query: () => ({ url: "/authentication/logout", method: "POST" }),
     }),
     getNationalId: build.query({
-     query: (username) => ({
-    url: `/authentication/national_id_photo/${username}/`,
-    method: "GET",
-     }),
-    transformResponse: (response) => {
-    // handle response here if needed
-    return response;
-  },
-  transformErrorResponse: (error) => {
-    console.error("Get National ID error:", error);
-    return {
-      message: error.data?.message || 'Unknown error',
-      status: error.status,
-    };
-  },          
-    async onQueryStarted() {}, //optional, can be used for optimistic updates
-    async onCacheEntryAdded() {}, //optional, can be used to manage cache
-    providesTags: ["User"], //tags for cache invalidation
-  }),
+      query: (username) => ({
+        url: `/authentication/national_id_photo/${username}/`,
+        method: "GET",
+      }),
+      transformResponse: (response) => response,
+      transformErrorResponse: (error) => ({
+        message: error.data?.message || "Unknown error",
+        status: error.status,
+      }),
+      providesTags: ["User"],
+    }),
+    // NEW: Fetch registration guidance uploaded by admin
+    getRegistrationGuidance: build.query({
+      query: () => ({
+        url: "/authentication/RegistrationGuidance/",
+        method: "GET",
+      }),
+      transformResponse: (response) => response, // expect { instructions, video_url }
+      transformErrorResponse: (error) => ({
+        message: error.data?.error || "Failed to fetch guidance",
+        status: error.status,
+      }),
+      providesTags: ["User"],
+    }),
   }),
 });
 
@@ -107,4 +80,5 @@ export const {
   useLogoutMutation,
   useGetNationalIdQuery,
   useRegisterMutation,
+  useGetRegistrationGuidanceQuery,
 } = authApi;

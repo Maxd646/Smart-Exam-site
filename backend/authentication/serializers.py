@@ -26,11 +26,22 @@ class ExamSessionSerializer(serializers.ModelSerializer):
         model = ExamSession
         fields = "__all__"
 
+from rest_framework import serializers
+from .models import Examorientetion
+
 class ExamorientetionSerializer(serializers.ModelSerializer):
+    media_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Examorientetion
-        fields = "__all__"
-        
+        fields = ['id', 'title', 'description', 'media_url', 'uploaded_at']
+
+    def get_media_url(self, obj):
+        request = self.context.get('request')
+        if obj.media:
+            return request.build_absolute_uri(obj.media.url)
+        return None
+
 
 class ExamAnswerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,6 +62,9 @@ class ExamQuestionSerializer(serializers.ModelSerializer):
             "D": obj.option_d
         }
 class RegistrationGuidanceSerializer(serializers.ModelSerializer):
+    instructions = serializers.CharField(source='description')  # map description → instructions
+    video_url = serializers.FileField(source='media', allow_null=True)  # map media → video_url
+
     class Meta:
         model =RegistrationGuidance
-        fields="__all__"
+        fields=["id", "instructions", "video_url"]

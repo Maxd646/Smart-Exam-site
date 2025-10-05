@@ -2,7 +2,9 @@ from django.contrib import admin
 from .models import (
     UserProfile, 
     Alert,
-    ExamQuestion
+    ExamQuestion,
+    RegistrationGuidance,
+    Examorientetion
     )
 
 admin.site.site_header = 'Anti-Cheating Admin management system'
@@ -29,4 +31,15 @@ class AlertAdmin(admin.ModelAdmin):
 @admin.register(ExamQuestion)
 class ExamQuestionAdmin(admin.ModelAdmin):
     list_display=('question_text', 'number')
+    
+
+@admin.register(RegistrationGuidance)
+class  RegistrationGuidanceAdmin(admin.ModelAdmin):
+    list_display=('media', 'title')
+
+
+@admin.register(Examorientetion)
+class ExamorientetionAdmin(admin.ModelAdmin):
+    list_display=("description", 'media')
+
     

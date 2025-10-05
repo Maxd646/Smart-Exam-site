@@ -1,5 +1,5 @@
 "use client";
-
+import { useGetRegistrationGuidanceQuery } from "../../api/restApi/authApi";
 import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRegisterMutation } from "../../api/restApi/authApi";
@@ -42,6 +42,14 @@ export default function Register() {
     const { name, value, files } = e.target;
     setFormData((prev) => ({ ...prev, [name]: files ? files[0] : value }));
   };
+  const {
+    data: guidance,
+    isLoading: guidanceLoading,
+    error: guidanceError,
+  } = useGetRegistrationGuidanceQuery();
+
+  // Pick the first guidance item if available
+  const mainGuidance = guidance && guidance.length > 0 ? guidance[0] : null;
 
   const capturePhoto = () => {
     if (!webcamRef.current) return;
@@ -323,10 +331,33 @@ export default function Register() {
 
       {/* Bottom Section */}
       <div className={styles.bottomSection}>
-        <p>💡 Need help? Watch this live tutorial while filling your form.</p>
-        <div className={styles.liveVideoPlaceholder}>
-          <p>Live Video Stream</p>
-        </div>
+        {guidanceLoading ? (
+          <p>Loading guidance...</p>
+        ) : guidanceError ? (
+          <p>Failed to load guidance. Please try again later.</p>
+        ) : mainGuidance ? (
+          <>
+            <p>{mainGuidance.instructions}</p>
+            {mainGuidance.video_url && (
+              <video
+                src={
+                  mainGuidance.video_url.startsWith("http")
+                    ? mainGuidance.video_url
+                    : `http://localhost:8000${mainGuidance.video_url}`
+                }
+                controls
+                width="100%"
+                style={{
+                  maxWidth: "1000px",
+                  borderRadius: "8px",
+                  marginTop: "12px",
+                }}
+              />
+            )}
+          </>
+        ) : (
+          <p>🔒 Please fill in all fields carefully. Your data is encrypted.</p>
+        )}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
   flex-direction: column;
   width: 100vw;
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a1c2c, #2b5876);
+  background: #FFFFFF;
   font-family: "Poppins", sans-serif;
   color: #fff;
 }
@@ -46,7 +46,7 @@
 .formCard {
   background: #fff;
   color: #333;
-  padding: 2.5rem 3rem;
+  padding: 5rem 5rem;
   border-radius: 2rem;
   width: 100%;          /* full width */
   max-width: 100%;      /* remove the max-width limit */
@@ -92,7 +92,7 @@
   font-weight: 600;
   border-radius: 0.8rem;
   cursor: pointer;
-  width: 48%;
+  width: 10%;
   font-size: 1rem;
   transition: all 0.3s ease;
   border: none;

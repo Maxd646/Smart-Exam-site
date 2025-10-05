@@ -1,54 +1,93 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./RulesPage.css";
 
 export default function RulesPage() {
   const navigate = useNavigate();
+  const scrollRef = useRef(null);
+  const [agreed, setAgreed] = useState(false);
+
+  const rules = [
+    {
+      title: "Copy & Paste Restrictions",
+      desc: "Copying, cutting, or pasting is prohibited.",
+    },
+    {
+      title: "Leaving Exam View",
+      desc: "Do not leave the exam page; switching tabs will be detected.",
+    },
+    {
+      title: "Cheating",
+      desc: "Any unauthorized assistance or devices will terminate the exam.",
+    },
+    {
+      title: "Phones & Electronics",
+      desc: "All phones, watches, and electronics are forbidden.",
+    },
+    {
+      title: "Multiple Login Prohibition",
+      desc: "Only one active session allowed.",
+    },
+    {
+      title: "Background Noise",
+      desc: "Maintain a quiet environment to avoid alerts.",
+    },
+    {
+      title: "Identification Verification",
+      desc: "Keep your ID visible for verification.",
+    },
+    {
+      title: "Screen Recording",
+      desc: "Screenshots or recordings are prohibited.",
+    },
+    {
+      title: "Network Stability",
+      desc: "Maintain a stable internet connection.",
+    },
+    {
+      title: "Time Management",
+      desc: "Manage your time; exam auto-submits when time ends.",
+    },
+  ];
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 5) {
+      setAgreed(true);
+    }
+  };
 
   const handleStartExam = () => {
-    navigate("/exam");
+    if (agreed) navigate("/exam");
+  };
+
+  const handleBack = () => {
+    navigate("/orientation");
   };
 
   return (
     <div className="rules-container">
-      <h1 className="rules-title">📜 Exam Rules & Warnings</h1>
+      <h6 className="rules-title">Exam Rules</h6>
 
-      <div className="rule-section">
-        <h2>1. Copy & Paste Restrictions 🚫</h2>
-        <p>
-          Copying (Ctrl+C), cutting (Ctrl+X), or pasting (Ctrl+V) is strictly
-          prohibited during the exam. Attempting these actions will be
-          automatically logged and may lead to disqualification.
-        </p>
+      <div className="scroll-box" ref={scrollRef} onScroll={handleScroll}>
+        {rules.map((rule, idx) => (
+          <div key={idx} className="rule-item">
+            <h2>{rule.title}</h2>
+            <p>{rule.desc}</p>
+          </div>
+        ))}
       </div>
 
-      <div className="rule-section">
-        <h2>2. Leaving Exam View ⚠️</h2>
-        <p>
-          You must stay on the exam page at all times. Switching tabs,
-          minimizing the window, or leaving the exam view will be detected and
-          recorded. Such actions can result in disqualification.
-        </p>
-      </div>
-
-      <div className="rule-section">
-        <h2>3. Cheating 🚨</h2>
-        <p>
-          Cheating includes any of the following: using another device, asking
-          someone for answers, communicating with other people, having more than
-          one face visible for authentication, or using unauthorized materials.
-          Violations will result in immediate exam termination and file
-          deletion.
-        </p>
-      </div>
-
-      <div className="rules-footer">
-        <p className="warning-text">
-          ⚠️ Breaking any of these rules will result in immediate exam
-          termination.
-        </p>
-        <button className="start-btn" onClick={handleStartExam}>
-          ✅ Start Exam
+      <div className="rules-footer rules-buttons">
+        <button className="back-btn" onClick={handleBack}>
+          ⬅️ Back
+        </button>
+        <button
+          className={`start-btn ${agreed ? "active" : "disabled"}`}
+          disabled={!agreed}
+          onClick={handleStartExam}
+        >
+          ✅ Agree & Start Exam
         </button>
       </div>
     </div>

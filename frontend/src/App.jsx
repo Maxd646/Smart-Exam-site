@@ -11,6 +11,7 @@ import { AuthProvider } from "./components/sections/AuthContext";
 import ProtectedRoute from "./components/sections/ProtectedRoute";
 import BiometricProtectedRoute from "./components/sections/BiometricProtectedRoute";
 import Register from "./components/sections/Register";
+import OrientationPage from "./components/sections/OrientationPage";
 
 function App() {
   return (
@@ -20,6 +21,9 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<HeroSection />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/start" element={<RulesPage />} />
+          <Route path="/exam" element={<ExamInterface />} />
+          <Route path="/orientation" element={<OrientationPage />} />
           <Route path="/login/biometric" element={<LoginWithBiometric />} />
 
           {/* Only login required */}
@@ -33,7 +37,7 @@ function App() {
           />
 
           {/* Both login + biometric required */}
-          <Route
+          {/* <Route
             path="/start"
             element={
               <BiometricProtectedRoute>
@@ -48,7 +52,7 @@ function App() {
                 <ExamInterface />
               </BiometricProtectedRoute>
             }
-          />
+          /> */}
 
           {/* Admin & Not Found */}
           <Route path="/admin" element={<AdminDashboard />} />
