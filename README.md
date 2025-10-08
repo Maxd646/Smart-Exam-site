@@ -1,7 +1,5 @@
 # 🛡️ Smart-Exam-site
 
-## 🚀 Project Status: **COMPLETED & READY FOR DEPLOYMENT**
-
 ## 🧠 Project Synopsis:
 
 ### 🛑 Problem Statement:
