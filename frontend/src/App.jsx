@@ -21,9 +21,6 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<HeroSection />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/start" element={<RulesPage />} />
-          <Route path="/exam/" element={<ExamInterface />} />
-          <Route path="/orientation" element={<OrientationPage />} />
           <Route path="/login/biometric" element={<LoginWithBiometric />} />
 
           {/* Only login required */}
@@ -37,7 +34,7 @@ function App() {
           />
 
           {/* Both login + biometric required */}
-          {/* <Route
+          <Route
             path="/start"
             element={
               <BiometricProtectedRoute>
@@ -52,7 +49,15 @@ function App() {
                 <ExamInterface />
               </BiometricProtectedRoute>
             }
-          /> */}
+          />
+          <Route
+            path="/orientation"
+            element={
+              <BiometricProtectedRoute>
+                <OrientationPage />
+              </BiometricProtectedRoute>
+            }
+          />
 
           {/* Admin & Not Found */}
           <Route path="/admin" element={<AdminDashboard />} />
