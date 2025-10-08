@@ -48,6 +48,14 @@ This ensures:
 
 ---
 
+Sample demo
+![landing page](Screenshot_7-10-2025_15843_localhost.jpeg)
+![login page](Screenshot_7-10-2025_15857_localhost.jpeg)
+![Register Page](Screenshot_7-10-2025_16533_localhost.jpeg)
+![Biometric page](Screenshot_7-10-2025_15648_localhost.jpeg)
+![orientaion page](Screenshot_7-10-2025_15738_localhost.jpeg)
+![login page](Screenshot_7-10-2025_1583_localhost.jpeg)
+
 ## 💻 Tech Stack:
 
 ### Frontend:
