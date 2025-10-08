@@ -6,22 +6,35 @@ export const examApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: baseQuery() }),
   tagTypes: ["Exam"],
   endpoints: (build) => ({
-    // Get questions for the exam
+   startExam: build.mutation({
+  query: ({ username }) => ({
+    url: `/authentication/start_exam_session/${username}/`, // username in URL
+    method: "POST",
+  }),
+}),
     getExamQuestions: build.query({
-      query: () => "/authentication/exam/questions/",
-      transformResponse: (response) => response.questions || [],
-      providesTags: ["Exam"],
+      query: ({ sessionId, page }) =>
+        `/authentication/exam/questions/${sessionId}/?page=${page}`,
     }),
-
-    // Submit exam answers
-    submitExam: build.mutation({
+    autoSaveAnswer: build.mutation({
       query: (payload) => ({
-        url: "/authentication/exam/submit/",
+        url: "/authentication/AutoSaveAnswer/",
         method: "POST",
         body: payload,
+      }),
+    }),
+    submitExam: build.mutation({
+      query: (sessionId) => ({
+        url: `/authentication/submit_exam/${sessionId}/`,
+        method: "POST",
       }),
     }),
   }),
 });
 
-export const { useGetExamQuestionsQuery, useSubmitExamMutation } = examApi;
+export const {
+  useStartExamMutation,
+  useGetExamQuestionsQuery,
+  useAutoSaveAnswerMutation,
+  useSubmitExamMutation,
+} = examApi;

@@ -2,12 +2,36 @@ from rest_framework import serializers
 from .models import (
     Alert, 
     UserProfile, 
-    ExamSession, 
     Examorientetion, 
-    ExamAnswer, 
-    ExamQuestion,
-    RegistrationGuidance
+    RegistrationGuidance,
+    Exam, 
+    Question, 
+    ExamSession, 
+    ExamAnswer,
+    Examorientetion
+
 )
+
+class QuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ['id', 'text', 'option_a', 'option_b', 'option_c', 'option_d']
+
+class ExamAnswerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExamAnswer
+        fields = ['id', 'session', 'question', 'selected_option', 'last_saved']
+
+class ExamSessionSerializer(serializers.ModelSerializer):
+    answers = ExamAnswerSerializer(many=True, read_only=True)
+    class Meta:
+        model = ExamSession
+        fields = ['id', 'student', 'exam', 'start_time', 'end_time', 'is_submitted', 'score', 'answers']
+
+class ExamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Exam
+        fields = ['id', 'title', 'duration_minutes']
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,15 +43,6 @@ class AlertSerializer(serializers.ModelSerializer):
     class Meta:
         model=Alert
         fields= "__all__"
-
-
-class ExamSessionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ExamSession
-        fields = "__all__"
-
-from rest_framework import serializers
-from .models import Examorientetion
 
 class ExamorientetionSerializer(serializers.ModelSerializer):
     media_url = serializers.SerializerMethodField()
@@ -42,25 +57,6 @@ class ExamorientetionSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.media.url)
         return None
 
-
-class ExamAnswerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ExamAnswer
-        fields = "__all__"
-class ExamQuestionSerializer(serializers.ModelSerializer):
-    options = serializers.SerializerMethodField()
-
-    class Meta:
-        model = ExamQuestion
-        fields = ['id', 'question_text', 'options']
-
-    def get_options(self, obj):
-        return {
-            "A": obj.option_a,
-            "B": obj.option_b,
-            "C": obj.option_c,
-            "D": obj.option_d
-        }
 class RegistrationGuidanceSerializer(serializers.ModelSerializer):
     instructions = serializers.CharField(source='description')  # map description → instructions
     video_url = serializers.FileField(source='media', allow_null=True)  # map media → video_url

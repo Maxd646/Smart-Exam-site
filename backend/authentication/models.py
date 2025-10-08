@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -20,30 +21,47 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
-class ExamQuestion(models.Model):
-    number=models.IntegerField()
-    question_text = models.TextField()
+class Exam(models.Model):
+    title = models.CharField(max_length=255)
+    duration_minutes = models.IntegerField()  # Exam duration in minutes
+
+    def __str__(self):
+        return self.title
+
+class Question(models.Model):
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, null=True, blank=True, related_name='questions')
+    text = models.TextField()
     option_a = models.CharField(max_length=255)
     option_b = models.CharField(max_length=255)
     option_c = models.CharField(max_length=255)
     option_d = models.CharField(max_length=255)
-    correct_option = models.CharField(
-        max_length=1,
-        choices=[('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D')]
-    )
+    correct_option = models.CharField(max_length=1, choices=[('A','A'),('B','B'),('C','C'),('D','D')])
+
     def __str__(self):
-        return self.question_text[:70]
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "text": self.question_text,
-            "options": {
-                "A": self.option_a,
-                "B": self.option_b,
-                "C": self.option_c,
-                "D": self.option_d,
-            }
-        }
+        return self.text
+
+class ExamSession(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    exam = models.ForeignKey('Exam', on_delete=models.CASCADE, null=True, blank=True)
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    is_submitted = models.BooleanField(default=False)
+    score = models.FloatField(null=True, blank=True)
+    def __str__(self):
+        return f"{self.student.username} - {self.exam.title}"
+    def is_time_over(self):
+        """Return True if exam time has expired."""
+        return self.end_time and timezone.now() >= self.end_time
+
+class ExamAnswer(models.Model):
+    session = models.ForeignKey(ExamSession, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey('Question', on_delete=models.CASCADE, null=True, blank=True)
+    selected_option = models.CharField(max_length=1, choices=[('A','A'),('B','B'),('C','C'),('D','D')], blank=True, null=True)
+    last_saved = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.session.student.username} - {self.question.text}"
+
 
 class Alert(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
@@ -55,24 +73,6 @@ class Alert(models.Model):
 
     def __str__(self):
         return f"Alert for {self.username} at {self.timestamp}"
-
-class ExamSession(models.Model):
-    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
-    started_at = models.DateTimeField(auto_now_add=True)
-    ended_at = models.DateTimeField(null=True, blank=True)
-    submitted = models.BooleanField(default=False)
-    evaluated = models.BooleanField(default=False)
-    score = models.FloatField(null=True, blank=True)
-    autosave_data = models.TextField(null=True, blank=True)
-    answers = models.TextField(null=True, blank=True) 
-
-class ExamAnswer(models.Model):
-    session = models.ForeignKey(ExamSession, on_delete=models.CASCADE, related_name="answers_detail")
-    question_id = models.IntegerField()
-    submitted_answer = models.TextField()
-    correct_answer = models.TextField(null=True, blank=True)
-    is_correct = models.BooleanField(null=True)
-
 class Examorientetion(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()

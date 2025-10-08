@@ -3,7 +3,10 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const authApi = createApi({
   reducerPath: "authApi",
-  baseQuery: fetchBaseQuery({ baseUrl: baseQury() }),
+  baseQuery: fetchBaseQuery({
+  baseUrl: baseQury(),
+  credentials: "include", // ✅ this sends cookies for session auth
+}),
   tagTypes: ["Auth", "User"],
   endpoints: (build) => ({
     login: build.mutation({
@@ -58,6 +61,7 @@ export const authApi = createApi({
       }),
       providesTags: ["User"],
     }),
+
     // NEW: Fetch registration guidance uploaded by admin
     getRegistrationGuidance: build.query({
       query: () => ({
@@ -71,6 +75,12 @@ export const authApi = createApi({
       }),
       providesTags: ["User"],
     }),
+    startExamSession: build.mutation({
+            query: (examId) => ({
+                url: `/authentication/start_exam_session/${examId}/`,
+                method: "POST",
+            }),
+    }),
   }),
 });
 
@@ -81,4 +91,5 @@ export const {
   useGetNationalIdQuery,
   useRegisterMutation,
   useGetRegistrationGuidanceQuery,
+  useStartExamSessionMutation,
 } = authApi;

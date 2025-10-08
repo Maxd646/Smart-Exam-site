@@ -17,12 +17,18 @@ from . views import (
     AdminstatusView,
     AdminLoginView,
     AdminlogoutView,
-    EndExamSessionView,
     SubmitExamView,
     ExamQuestionView,
-    RegistrationGuidanceView
+    RegistrationGuidanceView,
+    ExamCreateAPIView,
+    QuestionCreateAPIView,
+    AutoSaveAnswer
+
+    
 
 )
+
+path('start_exam_session/', StartExamSessionView.as_view(), name='start_exam_session'),
 
 
 urlpatterns = [
@@ -39,11 +45,14 @@ urlpatterns = [
     path("Adminlogin/", AdminLoginView.as_view(), name="AdminLogin"),
     path("Adminlogout/", AdminlogoutView.as_view(), name="AdminLogout"),
     path("Adminstatus/", AdminstatusView.as_view(), name="AdminStatus"),
-    path('end_exam_session/', EndExamSessionView.as_view(), name='end_exam_session'),
-    path('submit_exam/', SubmitExamView.as_view(), name='submit_exam'),
-    path('start_exam_session/', StartExamSessionView.as_view(), name='start_exam_session'),
-    path('exam/questions/', ExamQuestionView.as_view(), name='exam_questions'),
+    path('submit_exam<str:username>/', SubmitExamView.as_view(), name='submit_exam'),
+    path('start_exam_session/<str:username>/', StartExamSessionView.as_view(), name='start_exam_session'),
+    path('exam/questions/<str:username>/', ExamQuestionView.as_view(), name='exam_questions'),
+    path('AutoSaveAnswer/', AutoSaveAnswer.as_view()),
     path('RegistrationGuidance/', RegistrationGuidanceView.as_view(), name="RegistrationGuidance"),
+    path('admin/create-exam/', ExamCreateAPIView.as_view()),
+    path('admin/create-question/<str:username>/', QuestionCreateAPIView.as_view()),
+
     # path('fayda_callback/', FaydaCallbackView.as_view(), name='fayda_callback'),
     # path('verifayda_login/', Verifayda_loginView.as_view(), name='verifayda_login'),
     # path('fayda_callback/', FaydaCallbackView.as_view(), name='fayda_callback'),

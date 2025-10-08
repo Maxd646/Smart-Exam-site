@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from django.utils.decorators import method_decorator
 import numpy as np
@@ -8,6 +9,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from django.http import JsonResponse
+from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
 from .models import (
     UserProfile, 
@@ -15,8 +17,9 @@ from .models import (
     Alert, 
     Examorientetion,
     ExamAnswer,
-    ExamQuestion,
-    RegistrationGuidance
+    RegistrationGuidance,
+    Exam, 
+    Question
     )
 from django.views.decorators.http import require_GET
 import os, json, requests, base64, io
@@ -24,6 +27,7 @@ from django.shortcuts import redirect
 from urllib.parse import urlencode
 from django.core.files.storage import default_storage
 from io import BytesIO
+from rest_framework.permissions import IsAuthenticated
 from PIL import Image
 from.serializers import(
    ExamorientetionSerializer,
@@ -31,15 +35,41 @@ from.serializers import(
    AlertSerializer, 
    ExamSessionSerializer, 
    ExamAnswerSerializer, 
-   ExamQuestionSerializer,
    RegistrationGuidanceSerializer
 )
 from django.shortcuts import get_object_or_404
 from django.core.files.base import ContentFile
 from django.db import transaction
 import datetime, logging, traceback, uuid
-from rest_framework import status
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from .serializers import QuestionSerializer, ExamAnswerSerializer, ExamSessionSerializer, ExamSerializer
 
+# Admin creates exam (optional view)
+class ExamCreateAPIView(APIView):
+    def post(self, request):
+        serializer = ExamSerializer(data=request.data)
+        if serializer.is_valid():
+            exam = serializer.save()
+            return Response({"exam_id": exam.id}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+# Admin creates questions (optional)
+class QuestionCreateAPIView(APIView):
+    def post(self, request, exam_id):
+        exam = get_object_or_404(Exam, id=exam_id)
+        data = request.data
+        question = Question.objects.create(
+            exam=exam,
+            text=data['text'],
+            option_a=data['option_a'],
+            option_b=data['option_b'],
+            option_c=data['option_c'],
+            option_d=data['option_d'],
+            correct_option=data['correct_option']
+        )
+        return Response({"question_id": question.id}, status=status.HTTP_201_CREATED)
 
 def json_ok(message, **kwargs):
     payload = {"success": True, "message": message}
@@ -206,12 +236,6 @@ class RegisterWithNationalIDView(APIView):
 
     def get(self, request, *args, **kwargs):
         return Response({'error': 'Invalid request method.'}, status=405)
-class ExamQuestionView(APIView):
-    def get(self, request):
-        questions = ExamQuestion.objects.all()
-        serializer = ExamQuestionSerializer(questions, many=True)
-        return Response(serializer.data)
-
 # --- show the registered national id---
 @method_decorator(csrf_exempt, name='dispatch')
 class NationalIDPhotoView(APIView):
@@ -352,87 +376,95 @@ class BlockUserView(APIView):
             return Response({'error': f'Failed to block/unblock user: {str(e)}'}, status=500)
         return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
-@method_decorator(csrf_exempt, name='dispatch') 
-class ExamAnswerView(APIView):
-    @method_decorator(csrf_exempt)
-    @method_decorator(login_required)
-    def post(self, request, *args, **kwargs):
-        try:
-            data = request.data
-            session_id = data.get('session_id')
-            question_id = data.get('question_id')
-            submitted_answer = data.get('submitted_answer')
-
-            if not all([session_id, question_id, submitted_answer]):
-                return json_fail("session_id, question_id, and submitted_answer are required.", code=status.HTTP_400_BAD_REQUEST)
-
-            session = get_object_or_404(ExamSession, id=session_id, user=request.user)
-
-            answer = ExamAnswer.objects.create(
-                session=session,
-                question_id=question_id,
-                submitted_answer=submitted_answer
-            )
-
-            serializer = ExamAnswerSerializer(answer)
-            return json_ok("Answer recorded successfully.", answer=serializer.data)
-
-        except Exception as e:
-            return json_fail(str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+class ExamQuestionView(APIView):
+     def get(self, request, session_id):
+        session = get_object_or_404(ExamSession, id=session_id)
+        questions = session.exam.questions.all()
+        page = int(request.GET.get("page", 1))
+        per_page = 3
+        start = (page - 1) * per_page
+        end = start + per_page
+        serialized = QuestionSerializer(questions[start:end], many=True)
+        total_pages = (questions.count() + per_page - 1) // per_page
+        return Response({
+            "questions": serialized.data,
+            "total_pages": total_pages
+        })
+@method_decorator(csrf_exempt, name='dispatch')
 class StartExamSessionView(APIView):
-    @method_decorator(csrf_exempt)
-    @method_decorator(login_required)
-    def post(self, request, *args, **kwargs):
-        try:
-            existing_session = ExamSession.objects.filter(user=request.user, ended_at__isnull=True).first()
-            if existing_session:
-                return json_fail("An active exam session already exists.", code=status.HTTP_400_BAD_REQUEST)
+    permission_classes = [IsAuthenticated]
 
-            session = ExamSession.objects.create(user=request.user)
-            return json_ok("Exam session started.", session_id=session.id)
-        except Exception as e:
-            return json_fail(str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def post(self, request, username):
+        user = get_object_or_404(User, username=username)
+
+        # Decide which exam to start — you must define this logic
+        exam = Exam.objects.first()  # for example, the first exam in the DB
+
+        session, created = ExamSession.objects.get_or_create(student=user, exam=exam)
+
+        if session.start_time:
+            return Response({"message": "Exam already started", "id": session.id}, status=400)
+
+        session.start_time = timezone.now()
+        session.end_time = session.start_time + timezone.timedelta(minutes=exam.duration_minutes)
+        session.save()
+
+        for question in exam.questions.all():
+            ExamAnswer.objects.get_or_create(session=session, question=question)
+
+        return Response(ExamSessionSerializer(session).data, status=200)
+
 @method_decorator(csrf_exempt, name='dispatch')
 class SubmitExamView(APIView):
-    @method_decorator(login_required)
-    def post(self, request, *args, **kwargs):
-        # Expect { session_id, answers, duration }
-        session_id = request.data.get('session_id')
-        answers = request.data.get('answers', {})
-        if not session_id:
-            return json_fail("session_id required.", code=status.HTTP_400_BAD_REQUEST)
-        try:
-            session = ExamSession.objects.get(id=session_id, user=request.user)
-            # TODO: implement grading logic; for now persist answers and mark submitted
-            session.submitted_at = datetime.datetime.utcnow()
-            session.answers = json.dumps(answers)
-            session.submitted = True
-            session.save()
-            # TODO: enqueue grading job or compute score now
-            return json_ok("Exam submitted successfully.", session_id=session.id)
-        except ExamSession.DoesNotExist:
-            return json_fail("Exam session not found.", code=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return json_fail(str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def post(self, request, session_id):
+        session = get_object_or_404(ExamSession, id=session_id)
+        if session.is_submitted:
+            return Response({"message": "Exam already submitted"}, status=400)
 
-@method_decorator(csrf_exempt, name='dispatch')
-class EndExamSessionView(APIView):
-    @method_decorator(login_required)
-    def post(self, request, *args, **kwargs):
-        session_id = request.data.get('session_id')
-        if not session_id:
-            return json_fail("session_id required.", code=status.HTTP_400_BAD_REQUEST)
-        try:
-            session = ExamSession.objects.get(id=session_id, user=request.user)
-            session.ended_at = datetime.datetime.utcnow()
+        if session.end_time and timezone.now() > session.end_time:
+            session.is_submitted = True
             session.save()
-            return json_ok("Exam session ended.", session_id=session.id)
-        except ExamSession.DoesNotExist:
-            return json_fail("Exam session not found.", code=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return json_fail(str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+            return Response({"message": "Time is over, exam auto-submitted"}, status=200)
+
+        correct = 0
+        total = session.exam.question_set.count()  
+        for ans in session.answers.all():
+            if ans.selected_option and ans.selected_option == ans.question.correct_option:
+                correct += 1
+
+        session.score = (correct / total) * 100
+        session.is_submitted = True 
+        session.save()
+
+        return Response({
+            "message": "Exam submitted successfully",
+            "score": session.score
+        })
+class AutoSaveAnswer(APIView):
+     def post(self, request, session_id):
+        session = get_object_or_404(ExamSession, id=session_id)
+        if timezone.now() > session.end_time:
+            session.is_submitted = True
+            session.save()
+            return Response({"message": "Time is over, exam auto-submitted"}, status=200)
+
+        if session.is_submitted:
+            return Response({"message": "Exam already submitted"}, status=400)
+
+        correct = 0
+        total = session.exam.question_set.count()
+        for ans in session.answers.all():
+            if ans.selected_option == ans.question.correct_option:
+                correct += 1
+
+        session.score = (correct / total) * 100
+        session.is_submitted = True
+        session.save()
+
+        return Response({
+            "message": "Exam submitted successfully",
+            "score": session.score
+        })    
 class ListExamorientetionView(APIView):
     def get(self, request, *args, **kwargs):
         exams = Examorientetion.objects.all()
@@ -516,6 +548,33 @@ class UpdatePhotoView(APIView):
         return Response({'error': 'Invalid request method.'}, status=405)
 
 
+@method_decorator(csrf_exempt, name='dispatch') 
+class ExamAnswerView(APIView):
+    @method_decorator(csrf_exempt)
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        try:
+            data = request.data
+            session_id = data.get('session_id')
+            question_id = data.get('question_id')
+            submitted_answer = data.get('submitted_answer')
+
+            if not all([session_id, question_id, submitted_answer]):
+                return json_fail("session_id, question_id, and submitted_answer are required.", code=status.HTTP_400_BAD_REQUEST)
+
+            session = get_object_or_404(ExamSession, id=session_id, user=request.user)
+
+            answer = ExamAnswer.objects.create(
+                session=session,
+                question_id=question_id,
+                submitted_answer=submitted_answer
+            )
+
+            serializer = ExamAnswerSerializer(answer)
+            return json_ok("Answer recorded successfully.", answer=serializer.data)
+
+        except Exception as e:
+            return json_fail(str(e), code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # @method_decorator(csrf_exempt, name='dispatch')
 # class UploadFaceImageView(View):

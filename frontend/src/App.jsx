@@ -22,7 +22,7 @@ function App() {
           <Route path="/" element={<HeroSection />} />
           <Route path="/login" element={<Login />} />
           <Route path="/start" element={<RulesPage />} />
-          <Route path="/exam" element={<ExamInterface />} />
+          <Route path="/exam/" element={<ExamInterface />} />
           <Route path="/orientation" element={<OrientationPage />} />
           <Route path="/login/biometric" element={<LoginWithBiometric />} />
 

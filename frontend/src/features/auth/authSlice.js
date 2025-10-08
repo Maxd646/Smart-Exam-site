@@ -5,6 +5,7 @@ const initialState = {
     nationalId: "",
     isVerifiedWithCredentials: false,
     isVerifiedWithBiometrics: false,
+    isAuthenticated: false, 
 };
 
 const userSlice = createSlice({
@@ -16,12 +17,14 @@ const userSlice = createSlice({
             state.nationalId = action.payload?.photo_url || null; // only keep national ID
             state.isVerifiedWithCredentials = action.payload?.isVerifiedWithCredentials || false;
             state.isVerifiedWithBiometrics = action.payload?.isVerifiedWithBiometrics || false;
+            state.isAuthenticated = true;
         },
         logOut: (state) => {
             state.username = "";
             state.nationalId = "";
             state.isVerifiedWithCredentials = false;
             state.isVerifiedWithBiometrics = false;
+            state.isAuthenticated = false;
         },
         setNationalId: (state, action) => {
             state.nationalId = action.payload?.photo_url || null;
