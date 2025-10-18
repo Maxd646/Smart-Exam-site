@@ -47,6 +47,7 @@ This ensures:
 - **Security** - Multiple layers of identity verification
 
 ---
+**System Architecture**
 ![System Architecture](https://github.com/Maxd646/Smart-Exam-site/blob/main/system%20design.png)
 
 --- 
