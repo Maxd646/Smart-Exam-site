@@ -51,11 +51,6 @@ This ensures:
 ![System Architecture](https://github.com/Maxd646/Smart-Exam-site/blob/main/system%20design.png)
 
 --- 
-Sample demo
-![landing page](Screenshot_7-10-2025_15843_localhost.jpeg)
-![login page](Screenshot_7-10-2025_15857_localhost.jpeg)
-![Register Page](Screenshot_7-10-2025_16533_localhost.jpeg)
-![exam](image-1.png)
 
 ## 💻 Tech Stack:
 
@@ -319,4 +314,11 @@ This tests:
 
 ## Contributors:
 
-- Daniel Kebede(https://github.com/Maxd646)
+- Daniel Gashaw Kebede(https://github.com/Maxd646)
+
+---
+**Sample demo*8
+![landing page](Screenshot_7-10-2025_15843_localhost.jpeg)
+![login page](Screenshot_7-10-2025_15857_localhost.jpeg)
+![Register Page](Screenshot_7-10-2025_16533_localhost.jpeg)
+![exam](image-1.png)
