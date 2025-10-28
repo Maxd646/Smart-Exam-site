@@ -1,4 +1,4 @@
-# 🛡️ Smart-Exam-site
+# 🛡️ Smart-Exam
 
 ## 🧠 Project Synopsis:
 
